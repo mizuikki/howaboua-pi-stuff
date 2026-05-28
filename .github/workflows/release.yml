@@ -3,6 +3,7 @@ name: Release
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -31,7 +32,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Enable automerge for Changesets release PR
+      - name: Merge Changesets release PR and queue publish
         if: steps.changesets.outputs.published != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -42,9 +43,23 @@ jobs:
             --state open \
             --json number \
             --jq '.[0].number // empty')
-          if [ -n "$pr_number" ]; then
-            gh pr merge "$pr_number" --merge --auto
+          if [ -z "$pr_number" ]; then
+            exit 0
           fi
+
+          gh pr merge "$pr_number" --merge --auto
+
+          for attempt in {1..40}; do
+            state=$(gh pr view "$pr_number" --json state --jq '.state')
+            if [ "$state" = "MERGED" ]; then
+              gh workflow run release.yml --ref main
+              exit 0
+            fi
+            sleep 3
+          done
+
+          echo "Changesets release PR #$pr_number did not merge in time" >&2
+          exit 1
       - name: Delete Changesets release branch after publish
         if: steps.changesets.outputs.published == 'true'
         run: git push origin --delete changeset-release/main || true
