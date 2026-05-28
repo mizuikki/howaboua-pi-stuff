@@ -12,13 +12,14 @@
     "test": "bun run scripts/workspaces.mjs test",
     "pack:dry": "bun run scripts/workspaces.mjs pack:dry",
     "changeset": "changeset",
-    "version-packages": "changeset version && bun run changelog:sync",
+    "version-packages": "changeset version && bun run aggregate:sync && bun run changelog:sync",
     "release": "changeset publish",
     "check:changed": "bun run scripts/check-changed.mjs",
     "changeset:aggregates": "bun run scripts/add-aggregate-changesets.mjs",
     "hooks:install": "git config core.hooksPath .githooks",
     "changeset:check": "bun run scripts/require-changeset.mjs origin/main",
-    "changelog:sync": "bun run scripts/sync-monorepo-changelog.mjs"
+    "changelog:sync": "bun run scripts/sync-monorepo-changelog.mjs",
+    "aggregate:sync": "bun run scripts/sync-aggregate-packages.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.16",

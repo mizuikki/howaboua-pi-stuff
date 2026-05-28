@@ -45,9 +45,9 @@ for (const { pkg } of packageInfos) {
 }
 
 const aggregateBumps = [];
-if (needsStuff) aggregateBumps.push("@howaboua/pi-stuff");
-if (needsExtensions) aggregateBumps.push("@howaboua/pi-extensions");
-if (needsSkills) aggregateBumps.push("@howaboua/pi-skills");
+if (needsStuff && !changedPackages.has("@howaboua/pi-stuff")) aggregateBumps.push("@howaboua/pi-stuff");
+if (needsExtensions && !changedPackages.has("@howaboua/pi-extensions")) aggregateBumps.push("@howaboua/pi-extensions");
+if (needsSkills && !changedPackages.has("@howaboua/pi-skills")) aggregateBumps.push("@howaboua/pi-skills");
 
 if (aggregateBumps.length === 0) {
   if (existsSync(generatedPath)) writeFileSync(generatedPath, "");

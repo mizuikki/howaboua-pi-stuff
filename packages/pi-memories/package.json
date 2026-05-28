@@ -1,6 +1,6 @@
 {
 	"name": "@howaboua/pi-memories",
-	"version": "0.1.0",
+	"version": "0.0.0",
 	"type": "module",
 	"pi": {
 		"extensions": [
@@ -28,7 +28,8 @@
 		"src",
 		"README.md",
 		"tsconfig.json",
-		"biome.json"
+		"biome.json",
+		"LICENSE"
 	],
 	"repository": {
 		"type": "git",
@@ -38,5 +39,12 @@
 	"homepage": "https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-memories#readme",
 	"bugs": {
 		"url": "https://github.com/IgorWarzocha/howaboua-pi-stuff/issues"
-	}
+	},
+	"license": "MIT",
+	"keywords": [
+		"pi-package",
+		"pi",
+		"pi-extension",
+		"memory"
+	]
 }

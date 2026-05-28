@@ -1,6 +1,6 @@
 {
 	"name": "@howaboua/pi-skills",
-	"version": "0.0.1",
+	"version": "0.0.0",
 	"description": "all Howaboua Pi skills",
 	"type": "module",
 	"keywords": [
@@ -13,13 +13,14 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@howaboua/pi-markdown-workflows": "workspace:*"
+		"@howaboua/pi-markdown-workflows": "0.2.9"
 	},
 	"bundledDependencies": [
 		"@howaboua/pi-markdown-workflows"
 	],
 	"files": [
-		"README.md"
+		"README.md",
+		"LICENSE"
 	],
 	"pi": {
 		"skills": [
@@ -34,5 +35,8 @@
 	"homepage": "https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-skills#readme",
 	"bugs": {
 		"url": "https://github.com/IgorWarzocha/howaboua-pi-stuff/issues"
+	},
+	"scripts": {
+		"prepack": "bun run ../../scripts/prepare-aggregate-package.mjs"
 	}
 }
