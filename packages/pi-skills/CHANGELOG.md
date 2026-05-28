@@ -1,5 +1,11 @@
 # @howaboua/pi-skills
 
+## 0.0.2
+
+### Patch Changes
+
+- [#6](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/6) [`e793612`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/e793612fb32a4f7e418f5d28772e6de75a5c26ad) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Fix aggregate package resource paths so Pi can load installed dependency extensions and skills.
+
 ## 0.0.1
 
 ### Patch Changes
