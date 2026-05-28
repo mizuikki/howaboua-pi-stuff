@@ -136,7 +136,7 @@ Only do this when requested or clearly implied.
    - validation performed
    - linked issue with `Closes` or `Refs` as appropriate
    - risks or follow-ups if useful
-   - sponsor-check status, if checked
+   - sponsor-check status only when funding/repo hygiene was part of the task
 4. If updating an existing PR, push commits and edit the body if the scope changed.
 
 ### 8. Ask Codex for review
@@ -180,7 +180,7 @@ Before final response, check:
 - pushed/PR/comment side effects match what the user asked for
 - issue/PR links are returned when created or updated
 - validation results or skipped-validation reason are reported
-- sponsor button status was reported if it was checked
+- sponsor button status was reported only when funding/repo hygiene was part of the task
 - no unrelated local changes were included
 
 ## Error handling
