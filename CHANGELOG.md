@@ -29,10 +29,185 @@ Going forward, package-level changelogs remain the source of truth for each pack
 
 [Full changelog](./packages/pi-auto-reasoning-tool/CHANGELOG.md)
 
-### @howaboua/pi-codex-conversion — 1.5.16
+### @howaboua/pi-codex-conversion — 1.5.17
 
-- Aligned OpenAI Codex custom-provider cache-affinity headers, timeout handling, reasoning effort options, Bun proxy WebSocket support, and development dependencies with Pi 0.76.
-- Kept the extension's intentional hidden Codex provider retry behavior unchanged.
+### Patch Changes
+
+- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`d57f0cb`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/d57f0cbb5b92ce5cb7cf4736b6012c5ff0bebaae) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Fix TypeScript errors under the shared workspace typecheck settings.
 
 [Full changelog](./packages/pi-codex-conversion/CHANGELOG.md)
+
+### @howaboua/pi-explore-subagents — 0.1.5
+
+### Patch Changes
+
+- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`d57f0cb`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/d57f0cbb5b92ce5cb7cf4736b6012c5ff0bebaae) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Fix TypeScript errors under the shared workspace typecheck settings.
+
+[Full changelog](./packages/pi-explore-subagents/CHANGELOG.md)
+
+### @howaboua/pi-extensions — 0.0.1
+
+### Patch Changes
+
+- [`3c8c222`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/3c8c2222bb8d907a85517dd2155f8ea77d2441fb) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Initial public release from the Howaboua Pi Stuff monorepo.
+
+- Updated dependencies [[`3c8c222`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/3c8c2222bb8d907a85517dd2155f8ea77d2441fb), [`d57f0cb`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/d57f0cbb5b92ce5cb7cf4736b6012c5ff0bebaae), [`9a7890b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/9a7890b63c7a9fb5be8ab2bdd16c41e78017a5b9)]:
+  - @howaboua/pi-memories@0.1.0
+  - @howaboua/pi-explore-subagents@0.1.5
+  - @howaboua/pi-markdown-workflows@0.2.10
+  - @howaboua/pi-semantic-grep@0.1.11
+  - @howaboua/pi-smart-btw@0.1.2
+  - @howaboua/pi-subagent-review@0.1.53
+  - @howaboua/pi-vent@0.2.5
+
+[Full changelog](./packages/pi-extensions/CHANGELOG.md)
+
+### @howaboua/pi-markdown-workflows — 0.2.10
+
+### Patch Changes
+
+- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`d57f0cb`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/d57f0cbb5b92ce5cb7cf4736b6012c5ff0bebaae) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Fix TypeScript errors under the shared workspace typecheck settings.
+
+- [`9a7890b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/9a7890b63c7a9fb5be8ab2bdd16c41e78017a5b9) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Make the bundled skill-creator skill less tied to local personal workflow language.
+
+[Full changelog](./packages/pi-markdown-workflows/CHANGELOG.md)
+
+### @howaboua/pi-memories — 0.1.0
+
+### Minor Changes
+
+- [`3c8c222`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/3c8c2222bb8d907a85517dd2155f8ea77d2441fb) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Initial public release from the Howaboua Pi Stuff monorepo.
+
+### Patch Changes
+
+- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`d57f0cb`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/d57f0cbb5b92ce5cb7cf4736b6012c5ff0bebaae) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Fix TypeScript errors under the shared workspace typecheck settings.
+
+[Full changelog](./packages/pi-memories/CHANGELOG.md)
+
+### @howaboua/pi-semantic-grep — 0.1.11
+
+### Patch Changes
+
+- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`d57f0cb`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/d57f0cbb5b92ce5cb7cf4736b6012c5ff0bebaae) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Fix TypeScript errors under the shared workspace typecheck settings.
+
+[Full changelog](./packages/pi-semantic-grep/CHANGELOG.md)
+
+### @howaboua/pi-skill-agent-native-hardening — 0.0.1
+
+### Patch Changes
+
+- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`f252da3`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f252da342444236f06c6da3f7d92cbdab420d770) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Initial public skill packages from the Howaboua Pi Stuff monorepo.
+
+[Full changelog](./packages/pi-skill-agent-native-hardening/CHANGELOG.md)
+
+### @howaboua/pi-skill-anti-ai-copy — 0.0.1
+
+### Patch Changes
+
+- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`f252da3`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f252da342444236f06c6da3f7d92cbdab420d770) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Initial public skill packages from the Howaboua Pi Stuff monorepo.
+
+[Full changelog](./packages/pi-skill-anti-ai-copy/CHANGELOG.md)
+
+### @howaboua/pi-skill-chrome-cdp — 0.0.1
+
+### Patch Changes
+
+- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`f252da3`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f252da342444236f06c6da3f7d92cbdab420d770) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Initial public skill packages from the Howaboua Pi Stuff monorepo.
+
+[Full changelog](./packages/pi-skill-chrome-cdp/CHANGELOG.md)
+
+### @howaboua/pi-skill-gh-issue-pr-flow — 0.0.1
+
+### Patch Changes
+
+- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`f252da3`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f252da342444236f06c6da3f7d92cbdab420d770) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Initial public skill packages from the Howaboua Pi Stuff monorepo.
+
+[Full changelog](./packages/pi-skill-gh-issue-pr-flow/CHANGELOG.md)
+
+### @howaboua/pi-skill-omarchy-help — 0.0.1
+
+### Patch Changes
+
+- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`f252da3`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f252da342444236f06c6da3f7d92cbdab420d770) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Initial public skill packages from the Howaboua Pi Stuff monorepo.
+
+[Full changelog](./packages/pi-skill-omarchy-help/CHANGELOG.md)
+
+### @howaboua/pi-skill-project-reference-research — 0.0.1
+
+### Patch Changes
+
+- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`f252da3`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f252da342444236f06c6da3f7d92cbdab420d770) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Initial public skill packages from the Howaboua Pi Stuff monorepo.
+
+[Full changelog](./packages/pi-skill-project-reference-research/CHANGELOG.md)
+
+### @howaboua/pi-skill-skill-creator — 0.0.1
+
+### Patch Changes
+
+- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`f252da3`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f252da342444236f06c6da3f7d92cbdab420d770) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Initial public skill packages from the Howaboua Pi Stuff monorepo.
+
+[Full changelog](./packages/pi-skill-skill-creator/CHANGELOG.md)
+
+### @howaboua/pi-skills — 0.0.1
+
+### Patch Changes
+
+- [`3c8c222`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/3c8c2222bb8d907a85517dd2155f8ea77d2441fb) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Initial public release from the Howaboua Pi Stuff monorepo.
+
+- Updated dependencies [[`f252da3`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f252da342444236f06c6da3f7d92cbdab420d770)]:
+  - @howaboua/pi-skill-agent-native-hardening@0.0.1
+  - @howaboua/pi-skill-anti-ai-copy@0.0.1
+  - @howaboua/pi-skill-chrome-cdp@0.0.1
+  - @howaboua/pi-skill-gh-issue-pr-flow@0.0.1
+  - @howaboua/pi-skill-project-reference-research@0.0.1
+  - @howaboua/pi-skill-skill-creator@0.0.1
+
+[Full changelog](./packages/pi-skills/CHANGELOG.md)
+
+### @howaboua/pi-smart-btw — 0.1.2
+
+### Patch Changes
+
+- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`d57f0cb`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/d57f0cbb5b92ce5cb7cf4736b6012c5ff0bebaae) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Fix TypeScript errors under the shared workspace typecheck settings.
+
+[Full changelog](./packages/pi-smart-btw/CHANGELOG.md)
+
+### @howaboua/pi-stuff — 0.0.1
+
+### Patch Changes
+
+- [`3c8c222`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/3c8c2222bb8d907a85517dd2155f8ea77d2441fb) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Initial public release from the Howaboua Pi Stuff monorepo.
+
+- Updated dependencies [[`3c8c222`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/3c8c2222bb8d907a85517dd2155f8ea77d2441fb), [`f252da3`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f252da342444236f06c6da3f7d92cbdab420d770), [`d57f0cb`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/d57f0cbb5b92ce5cb7cf4736b6012c5ff0bebaae), [`9a7890b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/9a7890b63c7a9fb5be8ab2bdd16c41e78017a5b9)]:
+  - @howaboua/pi-memories@0.1.0
+  - @howaboua/pi-skill-agent-native-hardening@0.0.1
+  - @howaboua/pi-skill-anti-ai-copy@0.0.1
+  - @howaboua/pi-skill-chrome-cdp@0.0.1
+  - @howaboua/pi-skill-gh-issue-pr-flow@0.0.1
+  - @howaboua/pi-skill-project-reference-research@0.0.1
+  - @howaboua/pi-skill-skill-creator@0.0.1
+  - @howaboua/pi-explore-subagents@0.1.5
+  - @howaboua/pi-markdown-workflows@0.2.10
+  - @howaboua/pi-semantic-grep@0.1.11
+  - @howaboua/pi-smart-btw@0.1.2
+  - @howaboua/pi-subagent-review@0.1.53
+  - @howaboua/pi-vent@0.2.5
+
+[Full changelog](./packages/pi-stuff/CHANGELOG.md)
+
+### @howaboua/pi-subagent-review — 0.1.53
+
+### Patch Changes
+
+- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`d57f0cb`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/d57f0cbb5b92ce5cb7cf4736b6012c5ff0bebaae) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Fix TypeScript errors under the shared workspace typecheck settings.
+
+[Full changelog](./packages/pi-subagent-review/CHANGELOG.md)
+
+### @howaboua/pi-vent — 0.2.5
+
+### Patch Changes
+
+- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`d57f0cb`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/d57f0cbb5b92ce5cb7cf4736b6012c5ff0bebaae) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Fix TypeScript errors under the shared workspace typecheck settings.
+
+[Full changelog](./packages/pi-vent/CHANGELOG.md)
 
