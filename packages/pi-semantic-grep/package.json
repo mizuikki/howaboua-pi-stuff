@@ -5,13 +5,14 @@
 	"type": "module",
 	"license": "MIT",
 	"author": "Igor Warzocha",
-	"homepage": "https://github.com/IgorWarzocha/pi-semantic-grep#readme",
+	"homepage": "https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-semantic-grep#readme",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/IgorWarzocha/pi-semantic-grep.git"
+		"url": "git+https://github.com/IgorWarzocha/howaboua-pi-stuff.git",
+		"directory": "packages/pi-semantic-grep"
 	},
 	"bugs": {
-		"url": "https://github.com/IgorWarzocha/pi-semantic-grep/issues"
+		"url": "https://github.com/IgorWarzocha/howaboua-pi-stuff/issues"
 	},
 	"keywords": [
 		"pi",

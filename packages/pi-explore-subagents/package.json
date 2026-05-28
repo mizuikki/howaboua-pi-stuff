@@ -56,10 +56,11 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/IgorWarzocha/pi-explore-subagents.git"
+		"url": "git+https://github.com/IgorWarzocha/howaboua-pi-stuff.git",
+		"directory": "packages/pi-explore-subagents"
 	},
-	"homepage": "https://github.com/IgorWarzocha/pi-explore-subagents#readme",
+	"homepage": "https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-explore-subagents#readme",
 	"bugs": {
-		"url": "https://github.com/IgorWarzocha/pi-explore-subagents/issues"
+		"url": "https://github.com/IgorWarzocha/howaboua-pi-stuff/issues"
 	}
 }

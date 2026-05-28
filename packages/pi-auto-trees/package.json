@@ -7,12 +7,13 @@
 	"author": "pi-auto-trees contributors",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/IgorWarzocha/pi-auto-trees.git"
+		"url": "git+https://github.com/IgorWarzocha/howaboua-pi-stuff.git",
+		"directory": "packages/pi-auto-trees"
 	},
 	"bugs": {
-		"url": "https://github.com/IgorWarzocha/pi-auto-trees/issues"
+		"url": "https://github.com/IgorWarzocha/howaboua-pi-stuff/issues"
 	},
-	"homepage": "https://github.com/IgorWarzocha/pi-auto-trees#readme",
+	"homepage": "https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-auto-trees#readme",
 	"keywords": [
 		"pi-package",
 		"pi-extension",

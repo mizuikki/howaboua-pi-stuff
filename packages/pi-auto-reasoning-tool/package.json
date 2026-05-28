@@ -36,12 +36,13 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/howaboua/pi-auto-reasoning-tool.git"
+		"url": "git+https://github.com/IgorWarzocha/howaboua-pi-stuff.git",
+		"directory": "packages/pi-auto-reasoning-tool"
 	},
 	"bugs": {
-		"url": "https://github.com/howaboua/pi-auto-reasoning-tool/issues"
+		"url": "https://github.com/IgorWarzocha/howaboua-pi-stuff/issues"
 	},
-	"homepage": "https://github.com/howaboua/pi-auto-reasoning-tool#readme",
+	"homepage": "https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-auto-reasoning-tool#readme",
 	"publishConfig": {
 		"access": "public"
 	},

@@ -4,11 +4,12 @@
 	"description": "Pi extension with workflows tools and embedded subdirectory AGENTS.md context loading",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/IgorWarzocha/pi-markdown-workflows.git"
+		"url": "git+https://github.com/IgorWarzocha/howaboua-pi-stuff.git",
+		"directory": "packages/pi-markdown-workflows"
 	},
-	"homepage": "https://github.com/IgorWarzocha/pi-markdown-workflows#readme",
+	"homepage": "https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-markdown-workflows#readme",
 	"bugs": {
-		"url": "https://github.com/IgorWarzocha/pi-markdown-workflows/issues"
+		"url": "https://github.com/IgorWarzocha/howaboua-pi-stuff/issues"
 	},
 	"keywords": [
 		"pi",

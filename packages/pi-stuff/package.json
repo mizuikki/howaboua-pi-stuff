@@ -1,59 +1,68 @@
 {
-  "name": "@howaboua/pi-stuff",
-  "version": "0.1.0",
-  "description": "all Howaboua Pi extensions and skills",
-  "type": "module",
-  "keywords": [
-    "pi-package",
-    "pi",
-    "howaboua"
-  ],
-  "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  },
-  "dependencies": {
-    "@howaboua/pi-auto-reasoning-tool": "workspace:*",
-    "@howaboua/pi-auto-trees": "workspace:*",
-    "@howaboua/pi-codex-conversion": "workspace:*",
-    "@howaboua/pi-explore-subagents": "workspace:*",
-    "@howaboua/pi-markdown-workflows": "workspace:*",
-    "@howaboua/pi-memories": "workspace:*",
-    "@howaboua/pi-semantic-grep": "workspace:*",
-    "@howaboua/pi-smart-btw": "workspace:*",
-    "@howaboua/pi-subagent-review": "workspace:*",
-    "@howaboua/pi-vent": "workspace:*"
-  },
-  "bundledDependencies": [
-    "@howaboua/pi-auto-reasoning-tool",
-    "@howaboua/pi-auto-trees",
-    "@howaboua/pi-codex-conversion",
-    "@howaboua/pi-explore-subagents",
-    "@howaboua/pi-markdown-workflows",
-    "@howaboua/pi-memories",
-    "@howaboua/pi-semantic-grep",
-    "@howaboua/pi-smart-btw",
-    "@howaboua/pi-subagent-review",
-    "@howaboua/pi-vent"
-  ],
-  "files": [
-    "README.md"
-  ],
-  "pi": {
-    "extensions": [
-      "node_modules/@howaboua/pi-auto-reasoning-tool/src/index.ts",
-      "node_modules/@howaboua/pi-auto-trees/index.ts",
-      "node_modules/@howaboua/pi-codex-conversion/src/index.ts",
-      "node_modules/@howaboua/pi-explore-subagents/index.ts",
-      "node_modules/@howaboua/pi-markdown-workflows/dist/index.js",
-      "node_modules/@howaboua/pi-memories/src/index.ts",
-      "node_modules/@howaboua/pi-semantic-grep/src/index.ts",
-      "node_modules/@howaboua/pi-smart-btw/index.ts",
-      "node_modules/@howaboua/pi-subagent-review/index.ts",
-      "node_modules/@howaboua/pi-vent/extensions/vent.ts"
-    ],
-    "skills": [
-      "node_modules/@howaboua/pi-markdown-workflows/skills"
-    ]
-  }
+	"name": "@howaboua/pi-stuff",
+	"version": "0.0.1",
+	"description": "all Howaboua Pi extensions and skills",
+	"type": "module",
+	"keywords": [
+		"pi-package",
+		"pi",
+		"howaboua"
+	],
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"@howaboua/pi-auto-reasoning-tool": "workspace:*",
+		"@howaboua/pi-auto-trees": "workspace:*",
+		"@howaboua/pi-codex-conversion": "workspace:*",
+		"@howaboua/pi-explore-subagents": "workspace:*",
+		"@howaboua/pi-markdown-workflows": "workspace:*",
+		"@howaboua/pi-memories": "workspace:*",
+		"@howaboua/pi-semantic-grep": "workspace:*",
+		"@howaboua/pi-smart-btw": "workspace:*",
+		"@howaboua/pi-subagent-review": "workspace:*",
+		"@howaboua/pi-vent": "workspace:*"
+	},
+	"bundledDependencies": [
+		"@howaboua/pi-auto-reasoning-tool",
+		"@howaboua/pi-auto-trees",
+		"@howaboua/pi-codex-conversion",
+		"@howaboua/pi-explore-subagents",
+		"@howaboua/pi-markdown-workflows",
+		"@howaboua/pi-memories",
+		"@howaboua/pi-semantic-grep",
+		"@howaboua/pi-smart-btw",
+		"@howaboua/pi-subagent-review",
+		"@howaboua/pi-vent"
+	],
+	"files": [
+		"README.md"
+	],
+	"pi": {
+		"extensions": [
+			"node_modules/@howaboua/pi-auto-reasoning-tool/src/index.ts",
+			"node_modules/@howaboua/pi-auto-trees/index.ts",
+			"node_modules/@howaboua/pi-codex-conversion/src/index.ts",
+			"node_modules/@howaboua/pi-explore-subagents/index.ts",
+			"node_modules/@howaboua/pi-markdown-workflows/dist/index.js",
+			"node_modules/@howaboua/pi-memories/src/index.ts",
+			"node_modules/@howaboua/pi-semantic-grep/src/index.ts",
+			"node_modules/@howaboua/pi-smart-btw/index.ts",
+			"node_modules/@howaboua/pi-subagent-review/index.ts",
+			"node_modules/@howaboua/pi-vent/extensions/vent.ts"
+		],
+		"skills": [
+			"node_modules/@howaboua/pi-markdown-workflows/skills"
+		]
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/IgorWarzocha/howaboua-pi-stuff.git",
+		"directory": "packages/pi-stuff"
+	},
+	"homepage": "https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-stuff#readme",
+	"bugs": {
+		"url": "https://github.com/IgorWarzocha/howaboua-pi-stuff/issues"
+	}
 }

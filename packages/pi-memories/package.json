@@ -29,5 +29,14 @@
 		"README.md",
 		"tsconfig.json",
 		"biome.json"
-	]
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/IgorWarzocha/howaboua-pi-stuff.git",
+		"directory": "packages/pi-memories"
+	},
+	"homepage": "https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-memories#readme",
+	"bugs": {
+		"url": "https://github.com/IgorWarzocha/howaboua-pi-stuff/issues"
+	}
 }

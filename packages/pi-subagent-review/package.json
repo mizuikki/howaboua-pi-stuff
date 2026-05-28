@@ -22,11 +22,12 @@
 	],
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/IgorWarzocha/pi-subagent-review.git"
+		"url": "git+https://github.com/IgorWarzocha/howaboua-pi-stuff.git",
+		"directory": "packages/pi-subagent-review"
 	},
-	"homepage": "https://github.com/IgorWarzocha/pi-subagent-review#readme",
+	"homepage": "https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-subagent-review#readme",
 	"bugs": {
-		"url": "https://github.com/IgorWarzocha/pi-subagent-review/issues"
+		"url": "https://github.com/IgorWarzocha/howaboua-pi-stuff/issues"
 	},
 	"pi": {
 		"extensions": [

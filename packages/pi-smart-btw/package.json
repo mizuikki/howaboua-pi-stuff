@@ -53,11 +53,12 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/IgorWarzocha/pi-smart-btw.git"
+		"url": "git+https://github.com/IgorWarzocha/howaboua-pi-stuff.git",
+		"directory": "packages/pi-smart-btw"
 	},
-	"homepage": "https://github.com/IgorWarzocha/pi-smart-btw#readme",
+	"homepage": "https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-smart-btw#readme",
 	"bugs": {
-		"url": "https://github.com/IgorWarzocha/pi-smart-btw/issues"
+		"url": "https://github.com/IgorWarzocha/howaboua-pi-stuff/issues"
 	},
 	"engines": {
 		"node": ">=20.6.0"

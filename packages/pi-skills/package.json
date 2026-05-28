@@ -1,29 +1,38 @@
 {
-  "name": "@howaboua/pi-skills",
-  "version": "0.1.0",
-  "description": "all Howaboua Pi skills",
-  "type": "module",
-  "keywords": [
-    "pi-package",
-    "pi",
-    "howaboua"
-  ],
-  "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  },
-  "dependencies": {
-    "@howaboua/pi-markdown-workflows": "workspace:*"
-  },
-  "bundledDependencies": [
-    "@howaboua/pi-markdown-workflows"
-  ],
-  "files": [
-    "README.md"
-  ],
-  "pi": {
-    "skills": [
-      "node_modules/@howaboua/pi-markdown-workflows/skills"
-    ]
-  }
+	"name": "@howaboua/pi-skills",
+	"version": "0.0.1",
+	"description": "all Howaboua Pi skills",
+	"type": "module",
+	"keywords": [
+		"pi-package",
+		"pi",
+		"howaboua"
+	],
+	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
+	"dependencies": {
+		"@howaboua/pi-markdown-workflows": "workspace:*"
+	},
+	"bundledDependencies": [
+		"@howaboua/pi-markdown-workflows"
+	],
+	"files": [
+		"README.md"
+	],
+	"pi": {
+		"skills": [
+			"node_modules/@howaboua/pi-markdown-workflows/skills"
+		]
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/IgorWarzocha/howaboua-pi-stuff.git",
+		"directory": "packages/pi-skills"
+	},
+	"homepage": "https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-skills#readme",
+	"bugs": {
+		"url": "https://github.com/IgorWarzocha/howaboua-pi-stuff/issues"
+	}
 }

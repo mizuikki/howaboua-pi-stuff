@@ -5,13 +5,14 @@
 	"type": "module",
 	"license": "MIT",
 	"author": "Igor Warzocha",
-	"homepage": "https://github.com/IgorWarzocha/pi-vent#readme",
+	"homepage": "https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-vent#readme",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/IgorWarzocha/pi-vent.git"
+		"url": "git+https://github.com/IgorWarzocha/howaboua-pi-stuff.git",
+		"directory": "packages/pi-vent"
 	},
 	"bugs": {
-		"url": "https://github.com/IgorWarzocha/pi-vent/issues"
+		"url": "https://github.com/IgorWarzocha/howaboua-pi-stuff/issues"
 	},
 	"keywords": [
 		"pi-package",
