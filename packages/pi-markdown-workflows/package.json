@@ -41,7 +41,7 @@
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
 	"scripts": {
-		"build": "tsc",
+		"build": "tsgo -p tsconfig.json --noEmit false",
 		"test": "node tests/subdir-context.test.mjs && node tests/skill-discovery.test.mjs",
 		"check": "bun run lint && bun run typecheck",
 		"clean": "rm -rf dist",
