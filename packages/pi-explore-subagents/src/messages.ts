@@ -63,7 +63,8 @@ export function formatToolCall(
 ): string {
 	if (name === "read") {
 		const filePath = String(args["file_path"] ?? args["path"] ?? "?");
-		const offset = typeof args["offset"] === "number" ? args["offset"] : undefined;
+		const offset =
+			typeof args["offset"] === "number" ? args["offset"] : undefined;
 		const limit = typeof args["limit"] === "number" ? args["limit"] : undefined;
 		const range =
 			offset !== undefined || limit !== undefined

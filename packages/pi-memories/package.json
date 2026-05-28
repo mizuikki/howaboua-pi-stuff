@@ -1,50 +1,50 @@
 {
-  "name": "@howaboua/pi-memories",
-  "version": "0.0.0",
-  "type": "module",
-  "pi": {
-    "extensions": [
-      "./src/index.ts"
-    ]
-  },
-  "scripts": {
-    "check": "bun run lint && bun run typecheck",
-    "typecheck": "tsgo --noEmit",
-    "lint": "biome check .",
-    "format": "biome check --write ."
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^2.4.16",
-    "@earendil-works/pi-coding-agent": "^0.76.0",
-    "@earendil-works/pi-tui": "^0.76.0",
-    "@types/node": "^25.9.1",
-    "typebox": "^1.1.38",
-    "typescript": "^5.9.3"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "files": [
-    "src",
-    "README.md",
-    "tsconfig.json",
-    "biome.json",
-    "LICENSE"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/IgorWarzocha/howaboua-pi-stuff.git",
-    "directory": "packages/pi-memories"
-  },
-  "homepage": "https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-memories#readme",
-  "bugs": {
-    "url": "https://github.com/IgorWarzocha/howaboua-pi-stuff/issues"
-  },
-  "license": "MIT",
-  "keywords": [
-    "pi-package",
-    "pi",
-    "pi-extension",
-    "memory"
-  ]
+	"name": "@howaboua/pi-memories",
+	"version": "0.0.0",
+	"type": "module",
+	"pi": {
+		"extensions": [
+			"./src/index.ts"
+		]
+	},
+	"scripts": {
+		"check": "bun run lint && bun run typecheck",
+		"typecheck": "tsgo --noEmit",
+		"lint": "biome check .",
+		"format": "biome check --write ."
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.4.16",
+		"@earendil-works/pi-coding-agent": "^0.76.0",
+		"@earendil-works/pi-tui": "^0.76.0",
+		"@types/node": "^25.9.1",
+		"typebox": "^1.1.38",
+		"typescript": "^5.9.3"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"files": [
+		"src",
+		"README.md",
+		"tsconfig.json",
+		"biome.json",
+		"LICENSE"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/IgorWarzocha/howaboua-pi-stuff.git",
+		"directory": "packages/pi-memories"
+	},
+	"homepage": "https://github.com/IgorWarzocha/howaboua-pi-stuff/tree/main/packages/pi-memories#readme",
+	"bugs": {
+		"url": "https://github.com/IgorWarzocha/howaboua-pi-stuff/issues"
+	},
+	"license": "MIT",
+	"keywords": [
+		"pi-package",
+		"pi",
+		"pi-extension",
+		"memory"
+	]
 }
