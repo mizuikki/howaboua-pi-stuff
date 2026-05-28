@@ -106,8 +106,8 @@ export function parseNameDescriptionFrontmatter(
 	const parsed = parseFrontmatter(content);
 	if (!parsed) return null;
 
-	const name = normalizePlainText(parsed.name ?? "");
-	const description = normalizePlainText(parsed.description ?? "");
+	const name = normalizePlainText(parsed["name"] ?? "");
+	const description = normalizePlainText(parsed["description"] ?? "");
 	if (!name || !description) return null;
 
 	return { name, description };

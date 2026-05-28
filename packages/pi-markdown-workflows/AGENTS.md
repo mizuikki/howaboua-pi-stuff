@@ -1,13 +1,14 @@
 # AGENTS.md
 
-## Repository Overview
+## Overview
 
 Pi extension that provides workflow tooling (`workflows`, `workflows_create`, `/workflow`) and embedded subdirectory `AGENTS.md` autoloading.
 
 ## Build & Verification
 
-- Typecheck: `npx tsc --noEmit`
-- Build: `npm run build`
+- Typecheck: `bun run typecheck`
+- Check: `bun run check`
+- Build: `bun run build`
 
 ## Notes
 

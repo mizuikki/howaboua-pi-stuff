@@ -37,7 +37,7 @@ export const RPC_POLL_MS = 150;
 export const RPC_QUIESCENCE_MS = 500;
 
 export function getAgentDir(): string {
-	const configured = process.env.PI_CODING_AGENT_DIR?.trim();
+	const configured = process.env["PI_CODING_AGENT_DIR"]?.trim();
 	return configured || path.join(os.homedir(), ".pi", "agent");
 }
 

@@ -317,7 +317,7 @@ export default function piMemories(pi: ExtensionAPI) {
 	loadConfig();
 
 	pi.on("session_shutdown", async (_event, ctx) => {
-		if (process.env.PI_MEMORIES_CHILD === "1") return;
+		if (process.env["PI_MEMORIES_CHILD"] === "1") return;
 		const config = loadConfig();
 		if (!config.enabled) return;
 		logDebug(config, `shutdown cwd=${ctx.cwd}`);
@@ -372,8 +372,8 @@ export default function piMemories(pi: ExtensionAPI) {
 				cwd: ctx.cwd,
 				config,
 				compactedWindow,
-				summaryText,
 				tailText,
+				...(summaryText ? { summaryText } : {}),
 			});
 			logDebug(config, `memory session completed chars=${result.length}`);
 			appendInbox(config, ctx, result);

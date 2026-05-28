@@ -13,9 +13,10 @@ export function getMode(value: unknown): ExploreMode | null {
 export function getFinalOutput(messages: Message[]): string {
 	for (let i = messages.length - 1; i >= 0; i--) {
 		const message = messages[i];
+		if (!message) continue;
 		if (message.role !== "assistant") continue;
 		for (const part of message.content) {
-			if (part.type === "text") return part.text;
+			if (typeof part === "object" && part.type === "text") return part.text;
 		}
 	}
 	return "";
@@ -28,7 +29,7 @@ export function getToolCalls(
 	for (const message of messages) {
 		if (message.role !== "assistant") continue;
 		for (const part of message.content) {
-			if (part.type === "toolCall")
+			if (typeof part === "object" && part.type === "toolCall")
 				calls.push({ name: part.name, args: part.arguments });
 		}
 	}
@@ -61,9 +62,10 @@ export function formatToolCall(
 	args: Record<string, unknown>,
 ): string {
 	if (name === "read") {
-		const filePath = String(args.file_path ?? args.path ?? "?");
-		const offset = typeof args.offset === "number" ? args.offset : undefined;
-		const limit = typeof args.limit === "number" ? args.limit : undefined;
+		const filePath = String(args["file_path"] ?? args["path"] ?? "?");
+		const offset =
+			typeof args["offset"] === "number" ? args["offset"] : undefined;
+		const limit = typeof args["limit"] === "number" ? args["limit"] : undefined;
 		const range =
 			offset !== undefined || limit !== undefined
 				? `:${offset ?? 1}${limit !== undefined ? `-${(offset ?? 1) + limit - 1}` : ""}`
@@ -71,10 +73,10 @@ export function formatToolCall(
 		return `read ${filePath}${range}`;
 	}
 	if (name === "grep")
-		return `grep /${String(args.pattern ?? "")}/ in ${String(args.path ?? ".")}`;
+		return `grep /${String(args["pattern"] ?? "")}/ in ${String(args["path"] ?? ".")}`;
 	if (name === "find")
-		return `find ${String(args.pattern ?? "*")} in ${String(args.path ?? ".")}`;
-	if (name === "ls") return `ls ${String(args.path ?? ".")}`;
-	if (name === "bash") return `$ ${String(args.command ?? "")}`;
+		return `find ${String(args["pattern"] ?? "*")} in ${String(args["path"] ?? ".")}`;
+	if (name === "ls") return `ls ${String(args["path"] ?? ".")}`;
+	if (name === "bash") return `$ ${String(args["command"] ?? "")}`;
 	return `${name} ${JSON.stringify(args)}`;
 }

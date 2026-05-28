@@ -6,6 +6,7 @@ const root = process.cwd();
 const changesetDir = join(root, ".changeset");
 const packagesDir = join(root, "packages");
 const aggregateNames = new Set(["@howaboua/pi-stuff", "@howaboua/pi-extensions", "@howaboua/pi-skills"]);
+const aggregateExcludedNames = new Set(["@howaboua/pi-codex-conversion", "@howaboua/pi-skill-omarchy-help"]);
 const generatedPath = join(changesetDir, "aggregate-bundles.md");
 
 function readJson(path) {
@@ -36,7 +37,7 @@ let needsExtensions = false;
 let needsSkills = false;
 
 for (const { pkg } of packageInfos) {
-  if (!changedPackages.has(pkg.name) || aggregateNames.has(pkg.name)) continue;
+  if (!changedPackages.has(pkg.name) || aggregateNames.has(pkg.name) || aggregateExcludedNames.has(pkg.name)) continue;
   const hasExtensions = Array.isArray(pkg.pi?.extensions) && pkg.pi.extensions.length > 0;
   const hasSkills = Array.isArray(pkg.pi?.skills) && pkg.pi.skills.length > 0;
   if (hasExtensions || hasSkills) needsStuff = true;

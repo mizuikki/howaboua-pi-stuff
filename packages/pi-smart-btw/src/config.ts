@@ -23,7 +23,7 @@ const DEFAULT_CONFIG: Required<BtwConfig> = {
 
 function agentDir() {
 	return (
-		process.env.PI_CODING_AGENT_DIR?.trim() ||
+		process.env["PI_CODING_AGENT_DIR"]?.trim() ||
 		path.join(os.homedir(), ".pi", "agent")
 	);
 }

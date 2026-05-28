@@ -10,13 +10,13 @@ import {
 	type CodexConversionConfig,
 } from "../adapter/config.ts";
 import { CHANGELOG_URL, DISCORD_URL, GITHUB_URL, ISSUE_URL, openExternalUrl } from "./links.ts";
-import { fetchCodexUsage, formatCodexUsage, type CodexUsageSnapshot } from "./usage.ts";
+import { fetchCodexUsage, type CodexUsageSnapshot } from "./usage.ts";
 
 export interface CodexSettingsScreenOptions {
 	initialConfig: CodexConversionConfig;
 	onChange: (nextConfig: CodexConversionConfig) => boolean;
-	initialTab?: SettingsTab;
-	initialUsage?: CodexUsageSnapshot | { error: string };
+	initialTab?: SettingsTab | undefined;
+	initialUsage?: CodexUsageSnapshot | { error: string } | undefined;
 	onRefreshUsage?: () => Promise<CodexUsageSnapshot>;
 }
 
@@ -223,7 +223,7 @@ function formatUsageRow(row: string[], widths: number[]): string {
 	return `  ${row.map((cell, index) => padCell(cell, widths[index] ?? 0)).join("  ")}`;
 }
 
-function usageColumns(window: { usedPercent?: number; windowMinutes?: number; resetsAt?: number } | undefined): { bar: string; percent: string; reset: string } {
+function usageColumns(window: { usedPercent?: number | undefined; windowMinutes?: number | undefined; resetsAt?: number | undefined } | undefined): { bar: string; percent: string; reset: string } {
 	if (!window) return { bar: "—", percent: "", reset: "" };
 	const percent = window.usedPercent === undefined ? undefined : Math.max(0, Math.min(100, window.usedPercent));
 	return {

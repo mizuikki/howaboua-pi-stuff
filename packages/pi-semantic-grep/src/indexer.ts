@@ -117,6 +117,7 @@ export async function syncIndex(
 	for (let i = 0; i < files.length; i++) {
 		signal?.throwIfAborted();
 		const file = files[i];
+		if (!file) continue;
 		const snapshot = readFileSnapshot(root, file);
 		if (!snapshot) continue;
 		const old = known.get(file);

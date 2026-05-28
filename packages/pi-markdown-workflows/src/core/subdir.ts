@@ -127,17 +127,17 @@ function parsePersistedContextDetails(
 		SUBDIR_CONTEXT_DETAILS_KEY
 	];
 	if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-	const files = (value as Record<string, unknown>).files;
+	const files = (value as Record<string, unknown>)["files"];
 	if (!Array.isArray(files)) return null;
 	const parsed = files
 		.filter((item): item is PersistedContextFile => {
 			if (!item || typeof item !== "object" || Array.isArray(item))
 				return false;
-			const pathValue = (item as Record<string, unknown>).path;
-			const contentValue = (item as Record<string, unknown>).content;
+			const pathValue = (item as Record<string, unknown>)["path"];
+			const contentValue = (item as Record<string, unknown>)["content"];
 			return typeof pathValue === "string" && typeof contentValue === "string";
 		})
-		.map((item) => ({ path: item.path, content: item.content }));
+		.map((item) => ({ path: item["path"], content: item["content"] }));
 	if (!parsed.length) return null;
 	return { files: parsed };
 }
@@ -201,14 +201,14 @@ export function registerSubdirContextAutoload(pi: ExtensionAPI): void {
 			const details = (message as { details?: unknown }).details;
 			const persisted = parsePersistedContextDetails(details);
 			if (!persisted) continue;
-			for (const file of persisted.files) {
-				const absolute = resolvePath(file.path, currentCwd);
+			for (const file of persisted["files"]) {
+				const absolute = resolvePath(file["path"], currentCwd);
 				if (
 					path.basename(absolute) !== "AGENTS.md" ||
 					absolute === cwdAgentsPath
 				)
 					continue;
-				out.set(absolute, file.content);
+				out.set(absolute, file["content"]);
 			}
 		}
 		return out;
@@ -283,10 +283,10 @@ export function registerSubdirContextAutoload(pi: ExtensionAPI): void {
 		const isRead = event.toolName === "read";
 		const isPathDiscoveryTool = ["grep", "find", "ls"].includes(event.toolName);
 		const shellInput =
-			typeof event.input.command === "string"
-				? event.input.command
-				: typeof event.input.cmd === "string"
-					? event.input.cmd
+			typeof event.input["command"] === "string"
+				? event.input["command"]
+				: typeof event.input["cmd"] === "string"
+					? event.input["cmd"]
 					: undefined;
 		const isShell =
 			event.toolName === "bash" ||
@@ -294,7 +294,7 @@ export function registerSubdirContextAutoload(pi: ExtensionAPI): void {
 			event.toolName === "exec_command" ||
 			event.toolName === "shell";
 		if (!isRead && !isShell && !isPathDiscoveryTool) return undefined;
-		const pathInput = event.input.path as string | undefined;
+		const pathInput = event.input["path"] as string | undefined;
 		const isDiscoveryShell =
 			isShell &&
 			typeof shellInput === "string" &&

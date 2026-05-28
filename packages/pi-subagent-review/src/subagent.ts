@@ -103,7 +103,7 @@ export async function runReviewSubagent(
 				pendingRequests.delete(id);
 				reject(
 					new Error(
-						`Timed out waiting for RPC response to ${String(command.type)}.${details.stderr ? ` Stderr: ${details.stderr.trim()}` : ""}`,
+						`Timed out waiting for RPC response to ${String(command["type"])}.${details.stderr ? ` Stderr: ${details.stderr.trim()}` : ""}`,
 					),
 				);
 			}, timeoutMs);
@@ -124,7 +124,7 @@ export async function runReviewSubagent(
 
 	const handleEvent = (event: any) => {
 		lastEventAt = Date.now();
-		if (event.type === "message_end" && event.message) {
+		if (event["type"] === "message_end" && event.message) {
 			const message = event.message;
 			details.messages.push(message);
 			if (message.role === "assistant") {
@@ -144,7 +144,7 @@ export async function runReviewSubagent(
 			return;
 		}
 
-		if (event.type === "agent_end") agentEndCount++;
+		if (event["type"] === "agent_end") agentEndCount++;
 	};
 
 	const handleLine = (line: string) => {

@@ -116,6 +116,15 @@ export async function buildReviewConversationSummary(
 	const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
 	if (!auth.ok) throw new Error(`Summary model unavailable: ${auth.error}`);
 
+	const options = {
+		...(auth.apiKey ? { apiKey: auth.apiKey } : {}),
+		...(auth.headers ? { headers: auth.headers } : {}),
+		...(model.reasoning && config.summary.thinking !== "off"
+			? { reasoning: config.summary.thinking }
+			: {}),
+		...(ctx.signal ? { signal: ctx.signal } : {}),
+	};
+
 	const response = await completeSimple(
 		model,
 		{
@@ -127,15 +136,7 @@ export async function buildReviewConversationSummary(
 				},
 			],
 		},
-		{
-			apiKey: auth.apiKey,
-			headers: auth.headers,
-			reasoning:
-				model.reasoning && config.summary.thinking !== "off"
-					? config.summary.thinking
-					: undefined,
-			signal: ctx.signal,
-		},
+		options,
 	);
 
 	const summary = response.content

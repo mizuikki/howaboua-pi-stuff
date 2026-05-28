@@ -95,7 +95,7 @@ export default function ventExtension(pi: ExtensionAPI) {
 			});
 		},
 
-		renderCall(args, theme, context) {
+		renderCall(args, theme, _context) {
 			const trigger =
 				typeof args?.trigger === "string" && args.trigger.trim()
 					? ` ${args.trigger.trim()}`

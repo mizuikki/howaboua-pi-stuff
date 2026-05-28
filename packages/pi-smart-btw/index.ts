@@ -14,7 +14,7 @@ const FALLBACK_INJECT_SHORTCUT = "alt+c";
 const FALLBACK_DISMISS_SHORTCUT = "alt+x";
 
 type State = {
-	child?: BtwChild;
+	child: BtwChild | undefined;
 	turns: BtwTurn[];
 	running: boolean;
 	queue: Promise<void>;
@@ -104,7 +104,7 @@ function sendResultMessage(pi: ExtensionAPI, turn: BtwTurn) {
 }
 
 export default function (pi: ExtensionAPI) {
-	if (process.env.PI_SMART_BTW_CHILD === "1") return;
+	if (process.env["PI_SMART_BTW_CHILD"] === "1") return;
 	ensureConfig();
 	pi.registerMessageRenderer(MESSAGE_TYPE, (message, _options, theme) => {
 		const details = message.details as
@@ -135,7 +135,12 @@ export default function (pi: ExtensionAPI) {
 			);
 		}),
 	}));
-	const state: State = { turns: [], running: false, queue: Promise.resolve() };
+	const state: State = {
+		child: undefined,
+		turns: [],
+		running: false,
+		queue: Promise.resolve(),
+	};
 
 	const dismiss = async () => {
 		await state.child?.stop();

@@ -13,14 +13,15 @@ export async function embed(
 		"Content-Type": "application/json",
 	};
 	if (config.embeddings.apiKey)
-		headers.Authorization = `Bearer ${config.embeddings.apiKey}`;
+		headers["Authorization"] = `Bearer ${config.embeddings.apiKey}`;
 
-	const res = await fetch(config.embeddings.url, {
+	const init: RequestInit = {
 		method: "POST",
 		headers,
 		body: JSON.stringify({ model: config.embeddings.model, input }),
-		signal,
-	});
+	};
+	if (signal) init.signal = signal;
+	const res = await fetch(config.embeddings.url, init);
 	if (!res.ok)
 		throw new Error(`embedding endpoint ${res.status}: ${await res.text()}`);
 	const json = (await res.json()) as EmbeddingResponse;
@@ -36,9 +37,11 @@ export function cosine(a: number[], b: number[]): number {
 		bb = 0;
 	const n = Math.min(a.length, b.length);
 	for (let i = 0; i < n; i++) {
-		dot += a[i] * b[i];
-		aa += a[i] * a[i];
-		bb += b[i] * b[i];
+		const av = a[i] ?? 0;
+		const bv = b[i] ?? 0;
+		dot += av * bv;
+		aa += av * av;
+		bb += bv * bv;
 	}
 	return aa && bb ? dot / (Math.sqrt(aa) * Math.sqrt(bb)) : 0;
 }

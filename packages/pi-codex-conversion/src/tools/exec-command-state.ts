@@ -5,7 +5,7 @@ export type ExecCommandStatus = "running" | "done";
 export interface ExecCommandRenderInfo {
 	hidden: boolean;
 	status: ExecCommandStatus;
-	actionGroups?: ShellAction[][];
+	actionGroups?: ShellAction[][] | undefined;
 }
 
 interface ExecEntry {
@@ -14,8 +14,8 @@ interface ExecEntry {
 	summary: CommandSummary;
 	status: ExecCommandStatus;
 	hidden: boolean;
-	groupId?: number;
-	invalidate?: () => void;
+	groupId?: number | undefined;
+	invalidate?: () => void | undefined;
 }
 
 interface ExecGroup {
@@ -64,14 +64,6 @@ export function createExecCommandTracker(): ExecCommandTracker {
 		entriesByToolCallId.get(toolCallId)?.invalidate?.();
 	}
 
-	function findLatestEntryByCommand(command: string): ExecEntry | undefined {
-		let latest: ExecEntry | undefined;
-		for (const entry of entriesByToolCallId.values()) {
-			if (entry.command !== command) continue;
-			latest = entry;
-		}
-		return latest;
-	}
 
 	function getGroupForEntry(entry: ExecEntry | undefined): ExecGroup | undefined {
 		if (!entry?.groupId) return undefined;

@@ -3,7 +3,7 @@ import { Container, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
 import { isSubagentFailure } from "./config.js";
 import { MODE_SPECS, TOOL_NAME } from "./constants.js";
 import { formatToolCall, formatUsage, getToolCalls } from "./messages.js";
-import type { ChildRunDetails, ExploreMode } from "./types.js";
+import type { ChildRunDetails } from "./types.js";
 
 function getSubagentCallPreview(
 	details: Pick<ChildRunDetails, "task" | "mode">,

@@ -13,7 +13,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: oven-sh/setup-bun@v2
@@ -21,10 +21,16 @@ jobs:
       - name: Add aggregate package changesets
         run: bun run changeset:aggregates
       - name: Changesets release
+        id: changesets
         uses: changesets/action@v1
         with:
           publish: bun run release
           version: bun run version-packages
+          createGithubReleases: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Delete Changesets release branch after publish
+        if: steps.changesets.outputs.published == 'true'
+        run: git push origin --delete changeset-release/main || true

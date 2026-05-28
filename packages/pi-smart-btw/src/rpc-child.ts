@@ -36,11 +36,10 @@ export class BtwChild {
 	private agentEndCount = 0;
 	private closed = false;
 	private exitCode: number | undefined;
+	private readonly onUpdate: (() => void) | undefined;
 
-	constructor(
-		private cwd: string,
-		private onUpdate?: () => void,
-	) {
+	constructor(cwd: string, onUpdate?: () => void) {
+		this.onUpdate = onUpdate;
 		const cfg = readConfig();
 		const args = [
 			"--mode",
@@ -159,7 +158,7 @@ export class BtwChild {
 		return new Promise<T>((resolve, reject) => {
 			const timeout = setTimeout(() => {
 				this.pending.delete(id);
-				reject(new Error(`Timed out waiting for ${String(command.type)}`));
+				reject(new Error(`Timed out waiting for ${String(command["type"])}`));
 			}, timeoutMs);
 			this.pending.set(id, {
 				resolve: (v) => resolve(v as T),

@@ -62,7 +62,7 @@ export async function injectWorkflowUse(
 }
 
 export async function promoteWorkflow(
-	cwd: string,
+	_cwd: string,
 	workflow: WorkflowDefinition,
 ): Promise<string> {
 	const slug = slugify(workflow.name) || "workflow";
