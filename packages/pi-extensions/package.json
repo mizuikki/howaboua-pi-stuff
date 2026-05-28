@@ -29,15 +29,15 @@
 	],
 	"pi": {
 		"extensions": [
-			"node_modules/@howaboua/pi-auto-reasoning-tool/src/index.ts",
-			"node_modules/@howaboua/pi-auto-trees/index.ts",
-			"node_modules/@howaboua/pi-explore-subagents/index.ts",
-			"node_modules/@howaboua/pi-markdown-workflows/dist/index.js",
-			"node_modules/@howaboua/pi-memories/src/index.ts",
-			"node_modules/@howaboua/pi-semantic-grep/src/index.ts",
-			"node_modules/@howaboua/pi-smart-btw/index.ts",
-			"node_modules/@howaboua/pi-subagent-review/index.ts",
-			"node_modules/@howaboua/pi-vent/extensions/vent.ts"
+			"../pi-auto-reasoning-tool/src/index.ts",
+			"../pi-auto-trees/index.ts",
+			"../pi-explore-subagents/index.ts",
+			"../pi-markdown-workflows/dist/index.js",
+			"../pi-memories/src/index.ts",
+			"../pi-semantic-grep/src/index.ts",
+			"../pi-smart-btw/index.ts",
+			"../pi-subagent-review/index.ts",
+			"../pi-vent/extensions/vent.ts"
 		]
 	},
 	"repository": {

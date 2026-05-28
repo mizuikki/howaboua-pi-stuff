@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, posix } from "node:path";
 
 const root = process.cwd();
 const packagesDir = join(root, "packages");
@@ -22,15 +22,22 @@ function dependencyMap(filter) {
   return out;
 }
 
-function bundled(filter) {
-  return packages.filter(filter).map((entry) => entry.pkg.name);
+function packageInstallPath(packageName) {
+  return packageName.startsWith("@") ? packageName : packageName;
 }
 
-function piPaths(kind, filter) {
+function relativeDependencyResourcePath(aggregateName, dependencyName, resource) {
+  const fromDir = packageInstallPath(aggregateName);
+  const toDir = packageInstallPath(dependencyName);
+  const cleanedResource = resource.replace(/^\.\//, "");
+  return posix.join(posix.relative(fromDir, toDir), cleanedResource);
+}
+
+function piPaths(aggregateName, kind, filter) {
   const paths = [];
   for (const entry of packages.filter(filter)) {
     for (const resource of entry.pkg.pi?.[kind] ?? []) {
-      paths.push(`node_modules/${entry.pkg.name}/${resource.replace(/^\.\//, "")}`);
+      paths.push(relativeDependencyResourcePath(aggregateName, entry.pkg.name, resource));
     }
   }
   return paths;
@@ -43,8 +50,8 @@ function updateAggregate(dir, filter, includeExtensions, includeSkills) {
   delete pkg.bundledDependencies;
   pkg.files = Array.from(new Set([...(pkg.files ?? []), "README.md", "LICENSE"]));
   pkg.pi = {};
-  if (includeExtensions) pkg.pi.extensions = piPaths("extensions", filter);
-  if (includeSkills) pkg.pi.skills = piPaths("skills", filter);
+  if (includeExtensions) pkg.pi.extensions = piPaths(pkg.name, "extensions", filter);
+  if (includeSkills) pkg.pi.skills = piPaths(pkg.name, "skills", filter);
   writeFileSync(file, JSON.stringify(pkg, null, "\t") + "\n");
 }
 

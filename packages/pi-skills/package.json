@@ -26,12 +26,12 @@
 	],
 	"pi": {
 		"skills": [
-			"node_modules/@howaboua/pi-skill-agent-native-hardening/skills",
-			"node_modules/@howaboua/pi-skill-anti-ai-copy/skills",
-			"node_modules/@howaboua/pi-skill-chrome-cdp/skills",
-			"node_modules/@howaboua/pi-skill-gh-issue-pr-flow/skills",
-			"node_modules/@howaboua/pi-skill-project-reference-research/skills",
-			"node_modules/@howaboua/pi-skill-skill-creator/skills"
+			"../pi-skill-agent-native-hardening/skills",
+			"../pi-skill-anti-ai-copy/skills",
+			"../pi-skill-chrome-cdp/skills",
+			"../pi-skill-gh-issue-pr-flow/skills",
+			"../pi-skill-project-reference-research/skills",
+			"../pi-skill-skill-creator/skills"
 		]
 	},
 	"repository": {
