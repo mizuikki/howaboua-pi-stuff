@@ -1,20 +1,20 @@
 ---
 name: skill-creator
-description: Designs, writes, refactors, and packages agent skills for this workspace. Use when the user asks to create a new skill, improve an existing `SKILL.md`, tighten trigger descriptions, split heavy detail into `references/` or `scripts/`, add examples or validation, or port a workflow into a reusable skill. Do not use for one-off prompt tweaks, strict deployment runbooks, or vague workflows that are not repeatable yet.
+description: Designs, writes, refactors, and packages agent skills for a workspace. Use when the user asks to create a new skill, improve an existing `SKILL.md`, tighten trigger descriptions, split heavy detail into `references/` or `scripts/`, add examples or validation, or port a workflow into a reusable skill. Do not use for one-off prompt tweaks, strict deployment runbooks, or vague workflows that are not repeatable yet.
 ---
 
 # Skill Creator
 
 ## Purpose
-Use this skill to build or improve reusable skills for this workspace without turning them into bloated promptware. A good skill should trigger cleanly, stay operational, keep its frontmatter lean, and reflect the house style: act first when the path is clear, keep warmth where it helps, and troubleshoot only when reality actually breaks.
+Use this skill to build or improve reusable skills for a workspace without turning them into bloated promptware. A good skill should trigger cleanly, stay operational, keep its frontmatter lean, act when the path is clear, and troubleshoot only when reality actually breaks.
 
 ## When to use
 - The user wants a new skill for a recurring workflow.
 - An existing `SKILL.md` is too vague, too robotic, too bloated, or triggers badly.
 - A workflow needs better boundaries, validation, examples, or output contracts.
 - A skill should be split into `SKILL.md` plus `references/` and possibly `scripts/`.
-- A copied external skill needs to be adapted to this house instead of imported raw.
-- A skill is too eager to troubleshoot, too eager to preflight, or too willing to become a little church.
+- A copied external skill needs to be adapted to the target workspace instead of imported raw.
+- A skill is too eager to troubleshoot, too eager to preflight, or too willing to become doctrine.
 
 ## Do not use when
 - The workflow is still unclear, one-off, or not actually repeatable.
@@ -63,21 +63,21 @@ Use this skill to build or improve reusable skills for this workspace without tu
    - Put critical rules near the top.
    - Prefer exact file paths when pointing to supporting material.
 
-6. **Bake in house style deliberately.**
+6. **Bake in workspace style deliberately.**
    - Assume availability first; do the normal thing before opening a troubleshooting box.
    - Troubleshooting commands belong in a separate reference when possible, and should be read only when failure actually appears.
-   - If the path is clear and low-risk, act first instead of interrogating the user to death.
+   - If the path is clear and low-risk, act first instead of over-asking.
    - Ask before destructive or high-blast-radius changes.
-   - Warm the prose when the skill is collaboration-facing or identity-adjacent, but keep procedural docs crisp.
+   - Match the target workspace tone: warm where collaboration benefits, crisp where procedure matters.
 
 7. **When trigger quality feels off, correct it by feel first.**
-   - If Igor says a skill does not trigger well enough, assume the description is too vague, too timid, or missing the actual user phrasing.
-   - Tighten or broaden the `description` using the way Igor naturally asks for the thing.
+   - If a user says a skill does not trigger well enough, assume the description is too vague, too timid, or missing the actual user phrasing.
+   - Tighten or broaden the `description` using the way users naturally ask for the thing.
    - Add negative scope if the skill is barging in where it should stay quiet.
    - Do not default to elaborate eval harnesses or benchmark theater unless the user explicitly wants that.
    - Make the trigger sentence sharper, then let real use tell us if it still misses.
 
-8. **Validate the skill against the guide and the house.**
+8. **Validate the skill against the guide and the target workspace.**
    - Trigger boundary is clear.
    - Frontmatter is slim.
    - Workflow is ordered.
@@ -96,7 +96,7 @@ Use this skill to build or improve reusable skills for this workspace without tu
 - Frontmatter is not bloated.
 - `SKILL.md` stays operational; heavy detail is moved out.
 - The workflow does the normal thing first and troubleshoots only on pain.
-- If trigger quality was the complaint, the description was adjusted directly instead of disappearing into eval theater.
+- If trigger quality was the complaint, the description was adjusted directly instead of disappearing into evaluation machinery.
 - Examples are concrete enough to teach the shape.
 - File paths in references are exact.
 
@@ -114,7 +114,7 @@ Action: move factual detail or edge cases into `references/`.
 Action: move that check into `scripts/` only if the repeatable logic really benefits from code.
 
 ### Error: copied external skill is preachy or tool-religious
-Action: keep the useful workflow, delete the church.
+Action: keep the useful workflow, delete the doctrine.
 
 ## Output contract
 A completed skill-creation pass should leave:
@@ -144,10 +144,10 @@ Expected behaviour:
 4. Rework the default workflow so it tries the normal path first.
 
 ### Example 3
-User says: "Port this upstream skill, but make it fit our house."
+User says: "Port this upstream skill, but make it fit this workspace."
 
 Expected behaviour:
 1. Extract the real workflow from the upstream material.
 2. Keep the useful patterns.
 3. Remove doctrinal, bloated, or tool-religious framing.
-4. Rebuild it with our trigger style, boundaries, and house posture.
+4. Rebuild it with the workspace trigger style, boundaries, and operating posture.

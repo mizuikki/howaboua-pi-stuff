@@ -43,16 +43,16 @@
 	"scripts": {
 		"build": "tsc",
 		"test": "node tests/subdir-context.test.mjs && node tests/skill-discovery.test.mjs",
-		"check": "npm run lint && npm run typecheck",
+		"check": "bun run lint && bun run typecheck",
 		"clean": "rm -rf dist",
 		"lint": "biome check .",
 		"format": "biome check --write .",
-		"verify": "npm run check && npm run build && npm test",
+		"verify": "bun run check && bun run build && bun run test",
 		"publish:dry-run": "npm publish --dry-run",
 		"publish:dev": "npm publish --tag dev",
 		"release:dev": "npm version prerelease --preid dev && npm publish --tag dev",
-		"prepack": "npm run verify",
-		"prepublishOnly": "npm run verify",
+		"prepack": "bun run verify",
+		"prepublishOnly": "bun run verify",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
