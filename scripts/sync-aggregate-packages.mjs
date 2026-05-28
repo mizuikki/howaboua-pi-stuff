@@ -40,7 +40,7 @@ function updateAggregate(dir, filter, includeExtensions, includeSkills) {
   const file = join(packagesDir, dir, "package.json");
   const pkg = JSON.parse(readFileSync(file, "utf8"));
   pkg.dependencies = dependencyMap(filter);
-  pkg.bundledDependencies = bundled(filter);
+  delete pkg.bundledDependencies;
   pkg.files = Array.from(new Set([...(pkg.files ?? []), "README.md", "LICENSE"]));
   pkg.pi = {};
   if (includeExtensions) pkg.pi.extensions = piPaths("extensions", filter);

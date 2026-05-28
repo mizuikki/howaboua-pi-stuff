@@ -20,14 +20,6 @@
 		"@howaboua/pi-skill-project-reference-research": "0.0.1",
 		"@howaboua/pi-skill-skill-creator": "0.0.1"
 	},
-	"bundledDependencies": [
-		"@howaboua/pi-skill-agent-native-hardening",
-		"@howaboua/pi-skill-anti-ai-copy",
-		"@howaboua/pi-skill-chrome-cdp",
-		"@howaboua/pi-skill-gh-issue-pr-flow",
-		"@howaboua/pi-skill-project-reference-research",
-		"@howaboua/pi-skill-skill-creator"
-	],
 	"files": [
 		"README.md",
 		"LICENSE"
