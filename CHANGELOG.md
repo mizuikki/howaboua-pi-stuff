@@ -53,17 +53,16 @@ Going forward, package-level changelogs remain the source of truth for each pack
 
 [Full changelog](./packages/pi-explore-subagents/CHANGELOG.md)
 
-### @howaboua/pi-extensions — 0.0.3
+### @howaboua/pi-extensions — 0.0.4
 
 ### Changes
 
-- `@howaboua/pi-explore-subagents` now stores configuration in the user agent directory and migrates existing package-local config on first use.
-- `@howaboua/pi-auto-trees` now shows temporary `/end` progress feedback while summarising back to the marker.
+- Include bundled package updates:
 
-### Updated bundled packages
+  - @howaboua/pi-subagent-review: Add `/review loop` markers that summarize completed review-fix increments before the next review pass.
 
-- `@howaboua/pi-explore-subagents@0.1.6`
-- `@howaboua/pi-auto-trees@0.1.4`
+- Updated dependencies [[`26d4e8b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/26d4e8b89fb050463bf5cf3486ba1fa0ba84d8b3)]:
+  - @howaboua/pi-subagent-review@0.2.0
 
 [Full changelog](./packages/pi-extensions/CHANGELOG.md)
 
@@ -97,11 +96,11 @@ Going forward, package-level changelogs remain the source of truth for each pack
 
 [Full changelog](./packages/pi-semantic-grep/CHANGELOG.md)
 
-### @howaboua/pi-skill-agent-native-hardening — 0.0.1
+### @howaboua/pi-skill-agent-native-hardening — 0.0.2
 
 ### Changes
 
-- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`f252da3`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f252da342444236f06c6da3f7d92cbdab420d770) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Initial public skill packages from the Howaboua Pi Stuff monorepo.
+- [#15](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/15) [`26d4e8b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/26d4e8b89fb050463bf5cf3486ba1fa0ba84d8b3) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Makes the agent native hardening skill language-agnostic and adds JavaScript/TypeScript-, Python-, Rust-, and Go-specific reference guidance.
 
 [Full changelog](./packages/pi-skill-agent-native-hardening/CHANGELOG.md)
 
@@ -153,15 +152,16 @@ Going forward, package-level changelogs remain the source of truth for each pack
 
 [Full changelog](./packages/pi-skill-skill-creator/CHANGELOG.md)
 
-### @howaboua/pi-skills — 0.0.3
+### @howaboua/pi-skills — 0.0.4
 
 ### Changes
 
-- `@howaboua/pi-skill-gh-issue-pr-flow` now documents safer file-based GitHub issue, PR, and comment body posting.
+- Include bundled package updates:
 
-### Updated bundled packages
+  - @howaboua/pi-skill-agent-native-hardening: Makes the agent native hardening skill language-agnostic and adds JavaScript/TypeScript-, Python-, Rust-, and Go-specific reference guidance.
 
-- `@howaboua/pi-skill-gh-issue-pr-flow@0.0.2`
+- Updated dependencies [[`26d4e8b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/26d4e8b89fb050463bf5cf3486ba1fa0ba84d8b3)]:
+  - @howaboua/pi-skill-agent-native-hardening@0.0.2
 
 [Full changelog](./packages/pi-skills/CHANGELOG.md)
 
@@ -173,27 +173,26 @@ Going forward, package-level changelogs remain the source of truth for each pack
 
 [Full changelog](./packages/pi-smart-btw/CHANGELOG.md)
 
-### @howaboua/pi-stuff — 0.0.3
+### @howaboua/pi-stuff — 0.0.4
 
 ### Changes
 
-- `@howaboua/pi-explore-subagents` now stores configuration in the user agent directory and migrates existing package-local config on first use.
-- `@howaboua/pi-auto-trees` now shows temporary `/end` progress feedback while summarising back to the marker.
-- `@howaboua/pi-skill-gh-issue-pr-flow` now documents safer file-based GitHub issue, PR, and comment body posting.
+- Include bundled package updates:
 
-### Updated bundled packages
+  - @howaboua/pi-subagent-review: Add `/review loop` markers that summarize completed review-fix increments before the next review pass.
+  - @howaboua/pi-skill-agent-native-hardening: Makes the agent native hardening skill language-agnostic and adds JavaScript/TypeScript-, Python-, Rust-, and Go-specific reference guidance.
 
-- `@howaboua/pi-explore-subagents@0.1.6`
-- `@howaboua/pi-auto-trees@0.1.4`
-- `@howaboua/pi-skill-gh-issue-pr-flow@0.0.2`
+- Updated dependencies [[`26d4e8b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/26d4e8b89fb050463bf5cf3486ba1fa0ba84d8b3), [`26d4e8b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/26d4e8b89fb050463bf5cf3486ba1fa0ba84d8b3)]:
+  - @howaboua/pi-skill-agent-native-hardening@0.0.2
+  - @howaboua/pi-subagent-review@0.2.0
 
 [Full changelog](./packages/pi-stuff/CHANGELOG.md)
 
-### @howaboua/pi-subagent-review — 0.1.53
+### @howaboua/pi-subagent-review — 0.2.0
 
 ### Changes
 
-- [#1](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/1) [`d57f0cb`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/d57f0cbb5b92ce5cb7cf4736b6012c5ff0bebaae) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Fix TypeScript errors under the shared workspace typecheck settings.
+- [#15](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/15) [`26d4e8b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/26d4e8b89fb050463bf5cf3486ba1fa0ba84d8b3) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Add `/review loop` markers that summarize completed review-fix increments before the next review pass.
 
 [Full changelog](./packages/pi-subagent-review/CHANGELOG.md)
 

@@ -1,5 +1,16 @@
 # @howaboua/pi-extensions
 
+## 0.0.4
+
+### Changes
+
+- Include bundled package updates:
+
+  - @howaboua/pi-subagent-review: Add `/review loop` markers that summarize completed review-fix increments before the next review pass.
+
+- Updated dependencies [[`26d4e8b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/26d4e8b89fb050463bf5cf3486ba1fa0ba84d8b3)]:
+  - @howaboua/pi-subagent-review@0.2.0
+
 ## 0.0.3
 
 ### Changes
