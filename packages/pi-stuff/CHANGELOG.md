@@ -1,5 +1,18 @@
 # @howaboua/pi-stuff
 
+## 0.0.4
+
+### Changes
+
+- Include bundled package updates:
+
+  - @howaboua/pi-subagent-review: Add `/review loop` markers that summarize completed review-fix increments before the next review pass.
+  - @howaboua/pi-skill-agent-native-hardening: Makes the agent native hardening skill language-agnostic and adds JavaScript/TypeScript-, Python-, Rust-, and Go-specific reference guidance.
+
+- Updated dependencies [[`26d4e8b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/26d4e8b89fb050463bf5cf3486ba1fa0ba84d8b3), [`26d4e8b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/26d4e8b89fb050463bf5cf3486ba1fa0ba84d8b3)]:
+  - @howaboua/pi-skill-agent-native-hardening@0.0.2
+  - @howaboua/pi-subagent-review@0.2.0
+
 ## 0.0.3
 
 ### Changes

@@ -1,5 +1,11 @@
 # @howaboua/pi-subagent-review
 
+## 0.2.0
+
+### Changes
+
+- [#15](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/15) [`26d4e8b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/26d4e8b89fb050463bf5cf3486ba1fa0ba84d8b3) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Add `/review loop` markers that summarize completed review-fix increments before the next review pass.
+
 ## 0.1.53
 
 ### Changes
