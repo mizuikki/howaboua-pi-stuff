@@ -1,5 +1,11 @@
 # @howaboua/pi-explore-subagents
 
+## 0.1.8
+
+### Changes
+
+- [#28](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/28) [`f852b3d`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f852b3d94d3d7551e59f1dfa323d9978383b68d1) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Persist only minimal explore subagent result metadata in parent sessions instead of the child subagent transcript.
+
 ## 0.1.7
 
 ### Changes
