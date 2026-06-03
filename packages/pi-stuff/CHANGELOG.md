@@ -1,5 +1,16 @@
 # @howaboua/pi-stuff
 
+## 0.0.8
+
+### Changes
+
+- Include bundled package updates:
+
+  - @howaboua/pi-explore-subagents: Persist only minimal explore subagent result metadata in parent sessions instead of the child subagent transcript.
+
+- Updated dependencies [[`f852b3d`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f852b3d94d3d7551e59f1dfa323d9978383b68d1)]:
+  - @howaboua/pi-explore-subagents@0.1.8
+
 ## 0.0.7
 
 ### Changes
