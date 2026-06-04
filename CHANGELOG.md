@@ -37,13 +37,11 @@ Going forward, package-level changelogs remain the source of truth for each pack
 
 [Full changelog](./packages/pi-auto-trees/CHANGELOG.md)
 
-### @howaboua/pi-codex-conversion — 1.5.19
+### @howaboua/pi-codex-conversion — 1.5.20
 
 ### Changes
 
-- [#28](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/28) [`f852b3d`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f852b3d94d3d7551e59f1dfa323d9978383b68d1) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Preserve Codex WebSocket continuation across parallel tool-output replay drift and keep native web-search response items in Responses history for stable follow-up replay.
-
-- [#28](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/28) [`f852b3d`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f852b3d94d3d7551e59f1dfa323d9978383b68d1) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Adds an `adapterProviders` setting for enabling the Codex adapter on named custom providers.
+- [#30](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/30) [`645baa1`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/645baa16a2661d04964d5c9409830836a3405ead) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Match Codex background terminal polling by allowing empty `write_stdin` waits to use a dedicated 5-minute cap instead of the normal 30-second exec cap.
 
 [Full changelog](./packages/pi-codex-conversion/CHANGELOG.md)
 
