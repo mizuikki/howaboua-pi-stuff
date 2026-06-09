@@ -1,5 +1,30 @@
 # @howaboua/pi-extensions
 
+## 0.0.10
+
+### Changes
+
+- Include bundled package updates:
+
+  - @howaboua/pi-subagent-review: Bumps Pi package peer and runtime dependencies to 0.79.0. Updates `@howaboua/pi-subagent-review` review messages so isolated findings are triaged as advisory input, not treated as automatic implementation work.
+  - @howaboua/pi-markdown-workflows: Bumps Pi package peer and runtime dependencies to 0.79.0. Updates `@howaboua/pi-subagent-review` review messages so isolated findings are triaged as advisory input, not treated as automatic implementation work.
+  - @howaboua/pi-auto-trees: Bumps Pi package peer and runtime dependencies to 0.79.0. Updates `@howaboua/pi-subagent-review` review messages so isolated findings are triaged as advisory input, not treated as automatic implementation work.
+  - @howaboua/pi-semantic-grep: Bumps Pi package peer and runtime dependencies to 0.79.0. Updates `@howaboua/pi-subagent-review` review messages so isolated findings are triaged as advisory input, not treated as automatic implementation work.
+  - @howaboua/pi-vent: Bumps Pi package peer and runtime dependencies to 0.79.0. Updates `@howaboua/pi-subagent-review` review messages so isolated findings are triaged as advisory input, not treated as automatic implementation work.
+  - @howaboua/pi-smart-btw: Bumps Pi package peer and runtime dependencies to 0.79.0. Updates `@howaboua/pi-subagent-review` review messages so isolated findings are triaged as advisory input, not treated as automatic implementation work.
+  - @howaboua/pi-explore-subagents: Bumps Pi package peer and runtime dependencies to 0.79.0. Updates `@howaboua/pi-subagent-review` review messages so isolated findings are triaged as advisory input, not treated as automatic implementation work.
+  - @howaboua/pi-auto-reasoning-tool: Bumps Pi package peer and runtime dependencies to 0.79.0. Updates `@howaboua/pi-subagent-review` review messages so isolated findings are triaged as advisory input, not treated as automatic implementation work.
+
+- Updated dependencies [[`f380d72`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f380d721c2fbd9956d730cae456aa7f38e4f0546)]:
+  - @howaboua/pi-auto-reasoning-tool@0.1.7
+  - @howaboua/pi-auto-trees@0.1.6
+  - @howaboua/pi-explore-subagents@0.1.9
+  - @howaboua/pi-markdown-workflows@0.2.14
+  - @howaboua/pi-semantic-grep@0.1.13
+  - @howaboua/pi-smart-btw@0.2.1
+  - @howaboua/pi-subagent-review@0.2.3
+  - @howaboua/pi-vent@0.2.7
+
 ## 0.0.9
 
 ### Changes
