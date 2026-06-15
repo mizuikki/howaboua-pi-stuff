@@ -1,5 +1,11 @@
 # @howaboua/pi-semantic-grep
 
+## 0.1.14
+
+### Changes
+
+- [#47](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/47) [`f0aeb2a`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f0aeb2ae53397a4adfd084911a8ef201dcf5d89e) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Streams semantic search rows from SQLite and keeps only the best matches in memory, avoiding heap exhaustion on large indexes.
+
 ## 0.1.13
 
 ### Changes

@@ -1,6 +1,6 @@
 {
 	"name": "@howaboua/pi-stuff",
-	"version": "0.0.10",
+	"version": "0.0.11",
 	"description": "all Howaboua Pi extensions and skills",
 	"type": "module",
 	"keywords": [
@@ -18,7 +18,7 @@
 		"@howaboua/pi-explore-subagents": "0.1.9",
 		"@howaboua/pi-markdown-workflows": "0.2.14",
 		"@howaboua/pi-memories": "0.1.1",
-		"@howaboua/pi-semantic-grep": "0.1.13",
+		"@howaboua/pi-semantic-grep": "0.1.14",
 		"@howaboua/pi-skill-agent-native-hardening": "0.0.2",
 		"@howaboua/pi-skill-agents-md": "0.0.1",
 		"@howaboua/pi-skill-anti-ai-copy": "0.0.1",

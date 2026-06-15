@@ -1,5 +1,16 @@
 # @howaboua/pi-stuff
 
+## 0.0.11
+
+### Changes
+
+- Include bundled package updates:
+
+  - @howaboua/pi-semantic-grep: Streams semantic search rows from SQLite and keeps only the best matches in memory, avoiding heap exhaustion on large indexes.
+
+- Updated dependencies [[`f0aeb2a`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/f0aeb2ae53397a4adfd084911a8ef201dcf5d89e)]:
+  - @howaboua/pi-semantic-grep@0.1.14
+
 ## 0.0.10
 
 ### Changes
