@@ -41,11 +41,11 @@ Going forward, package-level changelogs remain the source of truth for each pack
 
 [Full changelog](./packages/pi-auto-trees/CHANGELOG.md)
 
-### @howaboua/pi-codex-conversion — 2.1.1
+### @howaboua/pi-codex-conversion — 2.1.2
 
 ### Changes
 
-- [#53](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/53) [`4c2e803`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/4c2e803f3cc9d9fe7daa0e54f4548af536c8b472) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Use OpenAI Codex subscription auth for Codex-backed web and image tools on all models, route image generation through the Codex image endpoints, and add optional image descriptions for text-only models.
+- [#56](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/56) [`cd98303`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/cd983037da3344ce7790af09f873d2b82799ea55) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Fix collapsed exec rendering for errored tool results without structured output details.
 
 [Full changelog](./packages/pi-codex-conversion/CHANGELOG.md)
 
