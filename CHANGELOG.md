@@ -41,11 +41,11 @@ Going forward, package-level changelogs remain the source of truth for each pack
 
 [Full changelog](./packages/pi-auto-trees/CHANGELOG.md)
 
-### @howaboua/pi-codex-conversion — 2.1.2
+### @howaboua/pi-codex-conversion — 2.1.3
 
 ### Changes
 
-- [#56](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/56) [`cd98303`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/cd983037da3344ce7790af09f873d2b82799ea55) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Fix collapsed exec rendering for errored tool results without structured output details.
+- [#60](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/60) [`6de2278`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/6de22781a8c449ccf193fcd66773754b08facfe7) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Bounds collapsed exec_command previews for large outputs and adds an all-models extras-only mode with per-tool overlays for apply_patch, view_image, web_run, and imagegen.
 
 [Full changelog](./packages/pi-codex-conversion/CHANGELOG.md)
 
