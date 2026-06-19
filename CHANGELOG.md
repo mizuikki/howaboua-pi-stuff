@@ -41,11 +41,11 @@ Going forward, package-level changelogs remain the source of truth for each pack
 
 [Full changelog](./packages/pi-auto-trees/CHANGELOG.md)
 
-### @howaboua/pi-codex-conversion — 2.1.3
+### @howaboua/pi-codex-conversion — 2.1.4
 
 ### Changes
 
-- [#60](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/60) [`6de2278`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/6de22781a8c449ccf193fcd66773754b08facfe7) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Bounds collapsed exec_command previews for large outputs and adds an all-models extras-only mode with per-tool overlays for apply_patch, view_image, web_run, and imagegen.
+- [#63](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/63) [`80ca67c`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/80ca67c5a2131b10d4bbb5a642e04e95fda547da) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Use OpenAI Codex subscription auth for Codex-backed web and image tools on all models, route image generation through the Codex image endpoints, add optional image descriptions for text-only models, shrink oversized tool outputs before native Responses compaction, fix PATH apply_patch Ctrl+O expansion, add a compact tools setting for collapsed patch summaries, avoid rereading generated image files during UI rendering, warn when a local checkout is behind npm, and show local-build guidance for incompatible bundled exec_bridge binaries.
 
 [Full changelog](./packages/pi-codex-conversion/CHANGELOG.md)
 
