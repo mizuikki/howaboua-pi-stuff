@@ -41,11 +41,11 @@ Going forward, package-level changelogs remain the source of truth for each pack
 
 [Full changelog](./packages/pi-auto-trees/CHANGELOG.md)
 
-### @howaboua/pi-codex-conversion — 2.1.4
+### @howaboua/pi-codex-conversion — 2.1.5
 
 ### Changes
 
-- [#63](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/63) [`80ca67c`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/80ca67c5a2131b10d4bbb5a642e04e95fda547da) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Use OpenAI Codex subscription auth for Codex-backed web and image tools on all models, route image generation through the Codex image endpoints, add optional image descriptions for text-only models, shrink oversized tool outputs before native Responses compaction, fix PATH apply_patch Ctrl+O expansion, add a compact tools setting for collapsed patch summaries, avoid rereading generated image files during UI rendering, warn when a local checkout is behind npm, and show local-build guidance for incompatible bundled exec_bridge binaries.
+- [#65](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/65) [`47351f8`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/47351f85c22e6b9e32ff6929e8cb63f4431473a2) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Keep native Responses compaction scoped to OpenAI Codex and explicitly configured providers when the adapter is enabled for all models.
 
 [Full changelog](./packages/pi-codex-conversion/CHANGELOG.md)
 
