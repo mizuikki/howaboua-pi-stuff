@@ -1,5 +1,16 @@
 # @howaboua/pi-extensions
 
+## 0.0.13
+
+### Changes
+
+- Include bundled package updates:
+
+  - @howaboua/pi-subagent-review: Fixes Pi 0.80 extension loading for review summary model calls.
+
+- Updated dependencies [[`2a4371b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/2a4371b67bcf69f5237152e087c6998b4810ab5a)]:
+  - @howaboua/pi-subagent-review@0.2.5
+
 ## 0.0.12
 
 ### Changes

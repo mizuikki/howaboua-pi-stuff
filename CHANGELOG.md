@@ -37,11 +37,13 @@ Going forward, package-level changelogs remain the source of truth for each pack
 
 [Full changelog](./packages/pi-auto-trees/CHANGELOG.md)
 
-### @howaboua/pi-codex-conversion — 2.1.5
+### @howaboua/pi-codex-conversion — 2.1.6
 
 ### Changes
 
-- [#65](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/65) [`47351f8`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/47351f85c22e6b9e32ff6929e8cb63f4431473a2) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Keep native Responses compaction scoped to OpenAI Codex and explicitly configured providers when the adapter is enabled for all models.
+- [#69](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/69) [`8b8ddb4`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/8b8ddb47812a6033b01f66e5442f282b4dc84d44) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Fixes PATH-mode apply_patch previews with trailing shell commands and keeps PATH web_run/imagegen commands on the long wait path.
+
+- [#69](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/69) [`8b8ddb4`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/8b8ddb47812a6033b01f66e5442f282b4dc84d44) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Updates the Codex provider compatibility pass for Pi 0.80.1.
 
 [Full changelog](./packages/pi-codex-conversion/CHANGELOG.md)
 
@@ -53,32 +55,16 @@ Going forward, package-level changelogs remain the source of truth for each pack
 
 [Full changelog](./packages/pi-explore-subagents/CHANGELOG.md)
 
-### @howaboua/pi-extensions — 0.0.12
+### @howaboua/pi-extensions — 0.0.13
 
 ### Changes
 
 - Include bundled package updates:
 
-  - @howaboua/pi-markdown-workflows: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
-  - @howaboua/pi-auto-reasoning-tool: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
-  - @howaboua/pi-auto-trees: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
-  - @howaboua/pi-smart-btw: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
-  - @howaboua/pi-subagent-review: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
-  - @howaboua/pi-vent: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
-  - @howaboua/pi-memories: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
-  - @howaboua/pi-explore-subagents: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
-  - @howaboua/pi-semantic-grep: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
+  - @howaboua/pi-subagent-review: Fixes Pi 0.80 extension loading for review summary model calls.
 
-- Updated dependencies [[`1a4302a`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/1a4302ad02a122480aeba29deacaa6f8925571ad)]:
-  - @howaboua/pi-auto-reasoning-tool@0.1.8
-  - @howaboua/pi-auto-trees@0.1.7
-  - @howaboua/pi-explore-subagents@0.1.10
-  - @howaboua/pi-markdown-workflows@0.2.15
-  - @howaboua/pi-memories@0.1.2
-  - @howaboua/pi-semantic-grep@0.1.15
-  - @howaboua/pi-smart-btw@0.2.2
-  - @howaboua/pi-subagent-review@0.2.4
-  - @howaboua/pi-vent@0.2.8
+- Updated dependencies [[`2a4371b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/2a4371b67bcf69f5237152e087c6998b4810ab5a)]:
+  - @howaboua/pi-subagent-review@0.2.5
 
 [Full changelog](./packages/pi-extensions/CHANGELOG.md)
 
@@ -207,40 +193,24 @@ Going forward, package-level changelogs remain the source of truth for each pack
 
 [Full changelog](./packages/pi-smart-btw/CHANGELOG.md)
 
-### @howaboua/pi-stuff — 0.0.12
+### @howaboua/pi-stuff — 0.0.13
 
 ### Changes
 
 - Include bundled package updates:
 
-  - @howaboua/pi-markdown-workflows: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
-  - @howaboua/pi-auto-reasoning-tool: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
-  - @howaboua/pi-auto-trees: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
-  - @howaboua/pi-smart-btw: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
-  - @howaboua/pi-subagent-review: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
-  - @howaboua/pi-vent: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
-  - @howaboua/pi-memories: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
-  - @howaboua/pi-explore-subagents: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
-  - @howaboua/pi-semantic-grep: Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
+  - @howaboua/pi-subagent-review: Fixes Pi 0.80 extension loading for review summary model calls.
 
-- Updated dependencies [[`1a4302a`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/1a4302ad02a122480aeba29deacaa6f8925571ad)]:
-  - @howaboua/pi-auto-reasoning-tool@0.1.8
-  - @howaboua/pi-auto-trees@0.1.7
-  - @howaboua/pi-explore-subagents@0.1.10
-  - @howaboua/pi-markdown-workflows@0.2.15
-  - @howaboua/pi-memories@0.1.2
-  - @howaboua/pi-semantic-grep@0.1.15
-  - @howaboua/pi-smart-btw@0.2.2
-  - @howaboua/pi-subagent-review@0.2.4
-  - @howaboua/pi-vent@0.2.8
+- Updated dependencies [[`2a4371b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/2a4371b67bcf69f5237152e087c6998b4810ab5a)]:
+  - @howaboua/pi-subagent-review@0.2.5
 
 [Full changelog](./packages/pi-stuff/CHANGELOG.md)
 
-### @howaboua/pi-subagent-review — 0.2.4
+### @howaboua/pi-subagent-review — 0.2.5
 
 ### Changes
 
-- [#67](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/67) [`1a4302a`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/1a4302ad02a122480aeba29deacaa6f8925571ad) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Updates Pi core package compatibility for Pi 0.80.1 and migrates summary model calls to the Pi 0.80 raw API entrypoints.
+- [#71](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/71) [`2a4371b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/2a4371b67bcf69f5237152e087c6998b4810ab5a) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Fixes Pi 0.80 extension loading for review summary model calls.
 
 [Full changelog](./packages/pi-subagent-review/CHANGELOG.md)
 

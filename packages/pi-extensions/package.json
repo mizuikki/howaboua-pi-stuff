@@ -1,6 +1,6 @@
 {
 	"name": "@howaboua/pi-extensions",
-	"version": "0.0.12",
+	"version": "0.0.13",
 	"description": "all Howaboua Pi extensions",
 	"type": "module",
 	"keywords": [
@@ -20,7 +20,7 @@
 		"@howaboua/pi-memories": "0.1.2",
 		"@howaboua/pi-semantic-grep": "0.1.15",
 		"@howaboua/pi-smart-btw": "0.2.2",
-		"@howaboua/pi-subagent-review": "0.2.4",
+		"@howaboua/pi-subagent-review": "0.2.5",
 		"@howaboua/pi-vent": "0.2.8"
 	},
 	"files": [

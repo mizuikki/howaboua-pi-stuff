@@ -1,5 +1,11 @@
 # @howaboua/pi-subagent-review
 
+## 0.2.5
+
+### Changes
+
+- [#71](https://github.com/IgorWarzocha/howaboua-pi-stuff/pull/71) [`2a4371b`](https://github.com/IgorWarzocha/howaboua-pi-stuff/commit/2a4371b67bcf69f5237152e087c6998b4810ab5a) Thanks [@IgorWarzocha](https://github.com/IgorWarzocha)! - Fixes Pi 0.80 extension loading for review summary model calls.
+
 ## 0.2.4
 
 ### Changes
