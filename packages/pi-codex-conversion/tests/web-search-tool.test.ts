@@ -133,6 +133,36 @@ process.stdin.on("end", () => {
 	}
 });
 
+test("executeCodexWebSearch uses the trimmed model returned by a callback", async () => {
+	const originalBin = process.env["PI_CODEX_WEB_RUN_BIN"];
+	try {
+		await withMockWebRun(`#!/usr/bin/env node
+import { writeFileSync } from "node:fs";
+let input = "";
+process.stdin.on("data", (chunk) => input += chunk);
+process.stdin.on("end", () => {
+  writeFileSync(process.env.CAPTURE_PATH, input);
+  console.log(JSON.stringify({ encrypted_output: "ciphertext" }));
+});
+`, async (webRunPath) => {
+			const capturePath = join(tmpdir(), `pi-web-run-callback-model-${Date.now()}.json`);
+			process.env["PI_CODEX_WEB_RUN_BIN"] = webRunPath;
+			process.env["CAPTURE_PATH"] = capturePath;
+			await executeCodexWebSearch(
+				{ search_query: [{ q: "OpenAI" }] },
+				createContext({ model: "gpt-5.4" }),
+				undefined,
+				{ model: () => "  gpt-5.5  " },
+			);
+			const captured = JSON.parse(await readFile(capturePath, "utf8")) as { model: string };
+			assert.equal(captured.model, "gpt-5.5");
+		});
+	} finally {
+		if (originalBin === undefined) delete process.env["PI_CODEX_WEB_RUN_BIN"];
+		else process.env["PI_CODEX_WEB_RUN_BIN"] = originalBin;
+	}
+});
+
 test("web_run rejects renamed Codex providers without canonical Codex auth", async () => {
 	const originalBin = process.env["PI_CODEX_WEB_RUN_BIN"];
 	try {
