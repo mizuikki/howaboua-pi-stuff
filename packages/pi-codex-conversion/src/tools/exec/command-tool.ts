@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 import { Type } from "typebox";
 import { keyHint, truncateToVisualLines } from "@earendil-works/pi-coding-agent";
 import { Container, Text, truncateToWidth } from "@earendil-works/pi-tui";
+import type { WebSearchAuthMode } from "../../adapter/activation/config.ts";
 import { renderExecCommandCall, renderGroupedExecCommandCall } from "../../ui/tool-rendering/codex-rendering.ts";
 import type { ExecCommandTracker } from "./command-state.ts";
 import type { ExecSessionManager, UnifiedExecResult } from "./session-manager.ts";
@@ -12,6 +13,7 @@ import { renderTextWithImages } from "../path/rendering.ts";
 import { extractPathApplyPatchPreviewPlan, getPathApplyPatchRenderState, markPathApplyPatchPreviewExit, setPathApplyPatchPreviewState, type PathApplyPatchRenderSegment } from "../path/apply-patch-preview.ts";
 import { renderPathToolCommandCall } from "../path/render-call.ts";
 import { webRunSessionStatePath } from "../web-run/tool.ts";
+import { resolveWebRunToolProvider } from "../web-run/provider.ts";
 import { resolveImageDescriptionModel } from "../view-image/tool.ts";
 import { codexToolProviderEnv, resolveCodexToolProvider } from "../../adapter/codex-tool-provider.ts";
 export { imageContentFromCodexViewImageOutput, imageContentsFromCodexViewImageOutput } from "../path/outputs.ts";
@@ -90,26 +92,37 @@ function createEmptyResultComponent(): Container {
 	return new Container();
 }
 
+function definedEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+	return Object.fromEntries(Object.entries(env).filter(([, value]) => value !== undefined));
+}
+
 async function resolveCodexBackedPathToolEnv(
 	command: string,
 	ctx: ExtensionContext,
 	options: {
 		includeViewImageDescription?: boolean | undefined;
 		resolveWebSearchModel?: ((ctx: ExtensionContext) => string | undefined) | undefined;
+		webSearchAuthMode?: WebSearchAuthMode | undefined;
+		allowConfiguredProvider?: ((model: ExtensionContext["model"]) => boolean) | undefined;
 	} = {},
 ): Promise<NodeJS.ProcessEnv | undefined> {
 	const toolNames = getCodexBackedPathToolNames(command, options);
 	if (toolNames.length === 0) return undefined;
 	try {
-		const env = codexToolProviderEnv(await resolveCodexToolProvider(ctx));
+		const needsCodexAuth = toolNames.some((toolName) => toolName !== "web_run");
+		const env = needsCodexAuth
+			? codexToolProviderEnv(await resolveCodexToolProvider(ctx))
+			: (await resolveWebRunToolProvider(ctx, { allowConfiguredProvider: options.allowConfiguredProvider, authMode: options.webSearchAuthMode })).pathEnv;
 		const webSearchModel = toolNames.includes("web_run") ? options.resolveWebSearchModel?.(ctx) : undefined;
-		return {
+		return definedEnv({
 			PI_CODEX_ACCESS_TOKEN: env["PI_CODEX_ACCESS_TOKEN"],
 			PI_CODEX_ACCOUNT_ID: env["PI_CODEX_ACCOUNT_ID"],
+			PI_CODEX_AUTH_MODE: env["PI_CODEX_AUTH_MODE"],
 			PI_CODEX_BASE_URL: env["PI_CODEX_BASE_URL"],
 			PI_CODEX_RESPONSES_URL: env["PI_CODEX_RESPONSES_URL"],
+			PI_CODEX_PROVIDER_HEADERS: env["PI_CODEX_PROVIDER_HEADERS"],
 			...(webSearchModel ? { PI_CODEX_MODEL: webSearchModel } : env["PI_CODEX_MODEL"] ? { PI_CODEX_MODEL: env["PI_CODEX_MODEL"] } : {}),
-		};
+		});
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
 		throw new Error(`${toolNames.join("/")} requires Pi model auth: ${message}`);
@@ -131,6 +144,8 @@ interface ExecCommandToolOptions {
 	compactTools?: boolean | undefined;
 	describeImagesForTextModels?: boolean | undefined;
 	resolveWebSearchModel?: ((ctx: ExtensionContext) => string | undefined) | undefined;
+	webSearchAuthMode?: WebSearchAuthMode | undefined;
+	allowConfiguredProvider?: ((model: ExtensionContext["model"]) => boolean) | undefined;
 }
 
 const COLLAPSED_OUTPUT_MAX_VISUAL_LINES = 5;
@@ -349,7 +364,7 @@ export function registerExecCommandTool(pi: ExtensionAPI, tracker: ExecCommandTr
 			}
 			const webRunStatePath = pathToolPolicy?.parseWebRunOutput ? webRunSessionStatePath(ctx) : undefined;
 			const describeImagesForTextModel = options.describeImagesForTextModels && !(Array.isArray(ctx.model?.input) && ctx.model.input.includes("image"));
-			const codexBackedPathToolEnv = await resolveCodexBackedPathToolEnv(typedParams.cmd, ctx, { includeViewImageDescription: describeImagesForTextModel, resolveWebSearchModel: options.resolveWebSearchModel });
+			const codexBackedPathToolEnv = await resolveCodexBackedPathToolEnv(typedParams.cmd, ctx, { includeViewImageDescription: describeImagesForTextModel, resolveWebSearchModel: options.resolveWebSearchModel, webSearchAuthMode: options.webSearchAuthMode, allowConfiguredProvider: options.allowConfiguredProvider });
 			const hasViewImageDescriptionCommand = getCodexBackedPathToolNames(typedParams.cmd, { includeViewImageDescription: true }).includes("view_image");
 			const viewImageDescriptionEnv = describeImagesForTextModel && hasViewImageDescriptionCommand
 				? { PI_CODEX_VIEW_IMAGE_DESCRIBE: "1", PI_CODEX_VIEW_IMAGE_MODEL: resolveImageDescriptionModel(ctx), ...(pathToolPolicy?.describeImageOutput ? { PI_CODEX_VIEW_IMAGE_STRUCTURED: "1" } : {}) }

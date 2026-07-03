@@ -36,15 +36,18 @@ struct PiOAuthCredential {
 }
 
 pub enum CodexAuth {
-    Bearer { token: String, account_id: String },
+    Bearer {
+        token: String,
+        account_id: Option<String>,
+    },
     AgentIdentity(AgentIdentityAuth),
 }
 
 impl CodexAuth {
-    pub fn account_id(&self) -> &str {
+    pub fn account_id(&self) -> Option<&str> {
         match self {
-            Self::Bearer { account_id, .. } => account_id,
-            Self::AgentIdentity(auth) => &auth.record.account_id,
+            Self::Bearer { account_id, .. } => account_id.as_deref(),
+            Self::AgentIdentity(auth) => Some(&auth.record.account_id),
         }
     }
 
@@ -315,11 +318,33 @@ async fn refresh_pi_codex_auth(
     }
     Ok(CodexAuth::Bearer {
         token: refreshed.access_token,
-        account_id: refreshed_account_id,
+        account_id: Some(refreshed_account_id),
     })
 }
 
+pub(crate) fn uses_configured_provider_auth() -> bool {
+    env::var("PI_CODEX_AUTH_MODE")
+        .ok()
+        .is_some_and(|mode| mode.eq_ignore_ascii_case("provider"))
+}
+
+fn provider_access_token() -> anyhow::Result<String> {
+    let token = env::var("PI_CODEX_ACCESS_TOKEN")
+        .context("PI_CODEX_AUTH_MODE=provider requires PI_CODEX_ACCESS_TOKEN")?;
+    if token.trim().is_empty() {
+        anyhow::bail!("PI_CODEX_AUTH_MODE=provider requires a non-empty PI_CODEX_ACCESS_TOKEN");
+    }
+    Ok(token)
+}
+
 pub async fn read_codex_auth() -> anyhow::Result<CodexAuth> {
+    if uses_configured_provider_auth() {
+        let token = provider_access_token()?;
+        return Ok(CodexAuth::Bearer {
+            token,
+            account_id: None,
+        });
+    }
     if let Ok(jwt) = env::var("PI_CODEX_AGENT_IDENTITY_JWT")
         && !jwt.trim().is_empty()
     {
@@ -331,7 +356,10 @@ pub async fn read_codex_auth() -> anyhow::Result<CodexAuth> {
         env::var("PI_CODEX_ACCESS_TOKEN"),
         env::var("PI_CODEX_ACCOUNT_ID"),
     ) {
-        return Ok(CodexAuth::Bearer { token, account_id });
+        return Ok(CodexAuth::Bearer {
+            token,
+            account_id: Some(account_id),
+        });
     }
     let auth_path = env::var("PI_AUTH_PATH")
         .map(PathBuf::from)
@@ -367,6 +395,6 @@ pub async fn read_codex_auth() -> anyhow::Result<CodexAuth> {
     }
     Ok(CodexAuth::Bearer {
         token: credential.access,
-        account_id: credential.account_id,
+        account_id: Some(credential.account_id),
     })
 }

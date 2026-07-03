@@ -77,26 +77,30 @@ export default function codexConversion(pi: ExtensionAPI) {
 		return resolveWebSearchModelSelection(ctx, state.config.openai.webSearchModel, /*fallbackModel*/ undefined);
 	}
 
+	function allowConfiguredProvider(config = state.config): (model: Model<any> | undefined) => boolean {
+		return (model) => {
+			if (config.scope.allProviders !== "off") return true;
+			const provider = model?.provider?.trim().toLowerCase();
+			return Boolean(provider && config.scope.additionalProviders.includes(provider));
+		};
+	}
+
 	function registerCoreTools(config = state.config): void {
 		registerApplyPatchTool(pi, { ...promptSnippetOptions(config), showDiffWhenCollapsed: showCollapsedPatchDiff(config) });
-		registerExecCommandTool(pi, tracker, sessions, { describeImagesForTextModels: config.tools.viewImageFallback, resolveWebSearchModel: resolveConfiguredWebSearchModel, ...customRenderingOptions(config), ...promptSnippetOptions(config), showOutputWhenCollapsed: config.mode === "normal", compactTools: config.ui.compactTools });
+		registerExecCommandTool(pi, tracker, sessions, { describeImagesForTextModels: config.tools.viewImageFallback, resolveWebSearchModel: resolveConfiguredWebSearchModel, webSearchAuthMode: config.openai.webSearchAuth, allowConfiguredProvider: allowConfiguredProvider(config), ...customRenderingOptions(config), ...promptSnippetOptions(config), showOutputWhenCollapsed: config.mode === "normal", compactTools: config.ui.compactTools });
 		registerWriteStdinTool(pi, sessions, { describeImagesForTextModels: config.tools.viewImageFallback, ...promptSnippetOptions(config) });
 		registerViewImageTool(pi, { describeForTextModels: config.tools.viewImageFallback, ...customRenderingOptions(config), ...promptSnippetOptions(config) });
 	}
 
 	function ensureOptionalNativeToolsRegistered(config = state.config): void {
-		const allowConfiguredProvider = (model: Model<any> | undefined): boolean => {
-			if (config.scope.allProviders !== "off") return true;
-			const provider = model?.provider?.trim().toLowerCase();
-			return Boolean(provider && config.scope.additionalProviders.includes(provider));
-		};
+		const configuredProviderAllowed = allowConfiguredProvider(config);
 		if (config.tools.webRun || config.tools.webRunOnly) {
 			const webSearchToolName = WEB_SEARCH_TOOL_NAME;
-			registerWebSearchTool(pi, webSearchToolName, { getRecentInput: () => latestRecentWebSearchInput, model: resolveConfiguredWebSearchModel, allowConfiguredProvider, ...customRenderingOptions(config), ...promptSnippetOptions(config) });
+			registerWebSearchTool(pi, webSearchToolName, { getRecentInput: () => latestRecentWebSearchInput, model: resolveConfiguredWebSearchModel, authMode: config.openai.webSearchAuth, allowConfiguredProvider: configuredProviderAllowed, ...customRenderingOptions(config), ...promptSnippetOptions(config) });
 			registeredNativeWebSearchTools.add(webSearchToolName);
 		}
 		if (config.tools.imageGeneration || config.tools.imageGenerationOnly) {
-			registerImageGenerationTool(pi, { allowConfiguredProvider, ...customRenderingOptions(config), ...promptSnippetOptions(config) });
+			registerImageGenerationTool(pi, { allowConfiguredProvider: configuredProviderAllowed, ...customRenderingOptions(config), ...promptSnippetOptions(config) });
 		}
 	}
 

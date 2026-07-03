@@ -31,8 +31,10 @@ Normal mode keeps the familiar Pi function-tool surface:
 - `write_stdin` — continue or poll a running exec session
 - `apply_patch` — patch edits through the bundled Rust patch tool
 - `view_image` — inspect local images through the bundled Rust image tool when the model supports image input
-- `web_run` — Codex-backed web search through the bundled Rust web tool when enabled and supported
+- `web_run` — web search through the bundled Rust web tool when enabled and supported
 - `imagegen` — Codex-backed image generation and image edits through the bundled Rust image generation tool when enabled and supported
+
+For configured `openai-responses` providers, `web_run` uses that provider's `/responses` endpoint and API key. Configure this in the settings UI with `Web search auth` plus `Additional providers`.
 
 PATH mode narrows the structured tool surface to shell control only:
 
@@ -43,7 +45,7 @@ In PATH mode, Codex-style extras live on the extension-injected internal PATH:
 
 - `apply_patch` — patch edits
 - `view_image` — inspect local images
-- `web_run` — Codex-backed web search
+- `web_run` — web search
 - `imagegen` — Codex-backed image generation and image edits
 
 Notably:

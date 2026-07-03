@@ -1,4 +1,4 @@
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use crate::cli::{WebRunArgs, WebRunSearchResult};
 use crate::types;
@@ -34,7 +34,12 @@ fn search_prompt(args: &WebRunArgs) -> anyhow::Result<String> {
         let prompts = queries
             .iter()
             .filter(|query| !query.q.trim().is_empty())
-            .map(|query| format!("Find images and current sources for: {}", format_search_query(query)))
+            .map(|query| {
+                format!(
+                    "Find images and current sources for: {}",
+                    format_search_query(query)
+                )
+            })
             .collect::<Vec<_>>();
         if !prompts.is_empty() {
             return Ok(prompts.join("\n"));
@@ -46,8 +51,12 @@ fn search_prompt(args: &WebRunArgs) -> anyhow::Result<String> {
 fn response_length_instruction(args: &WebRunArgs) -> Option<&'static str> {
     match args.commands.response_length.as_ref() {
         Some(types::SearchResponseLength::Short) => Some("Keep the answer short and focused."),
-        Some(types::SearchResponseLength::Medium) => Some("Use a medium-length answer with enough detail to be useful."),
-        Some(types::SearchResponseLength::Long) => Some("Use a longer answer with fuller detail and source coverage."),
+        Some(types::SearchResponseLength::Medium) => {
+            Some("Use a medium-length answer with enough detail to be useful.")
+        }
+        Some(types::SearchResponseLength::Long) => {
+            Some("Use a longer answer with fuller detail and source coverage.")
+        }
         None => None,
     }
 }
@@ -55,7 +64,9 @@ fn response_length_instruction(args: &WebRunArgs) -> Option<&'static str> {
 fn format_search_query(query: &types::SearchQuery) -> String {
     let mut parts = vec![query.q.clone()];
     if let Some(recency) = query.recency {
-        parts.push(format!("Only include results from the last {recency} days."));
+        parts.push(format!(
+            "Only include results from the last {recency} days."
+        ));
     }
     if let Some(domains) = query.domains.as_ref() {
         let domains = domains
@@ -64,7 +75,10 @@ fn format_search_query(query: &types::SearchQuery) -> String {
             .cloned()
             .collect::<Vec<_>>();
         if !domains.is_empty() {
-            parts.push(format!("Restrict results to these domains: {}.", domains.join(", ")));
+            parts.push(format!(
+                "Restrict results to these domains: {}.",
+                domains.join(", ")
+            ));
         }
     }
     parts.join(" ")

@@ -14,6 +14,14 @@ export interface CodexToolProvider {
 	accountId: string;
 }
 
+export interface ConfiguredResponsesToolProvider {
+	baseUrl: string | undefined;
+	responsesUrl: string;
+	model: string | undefined;
+	token: string;
+	headers: Record<string, string> | undefined;
+}
+
 const CODEX_ORIGINATOR = "codex_cli_rs";
 
 export function resolveCodexApiProviderBaseUrl(modelBaseUrl: string | undefined): string {
@@ -44,6 +52,24 @@ function headerValue(headers: Record<string, string> | undefined, name: string):
 		if (key.toLowerCase() === lowerName) return value;
 	}
 	return undefined;
+}
+
+function headersWithoutAuthorization(headers: Record<string, string> | undefined): Record<string, string> | undefined {
+	if (!headers) return undefined;
+	const filtered = Object.fromEntries(Object.entries(headers).filter(([key, value]) => key.toLowerCase() !== "authorization" && value.trim() !== ""));
+	return Object.keys(filtered).length > 0 ? filtered : undefined;
+}
+
+function envWithoutCodexAuth(): NodeJS.ProcessEnv {
+	const env = { ...process.env };
+	for (const key of ["PI_CODEX_ACCESS_TOKEN", "PI_CODEX_ACCOUNT_ID", "PI_CODEX_AGENT_IDENTITY_JWT", "PI_CODEX_AUTH_MODE", "PI_CODEX_BASE_URL", "PI_CODEX_RESPONSES_URL", "PI_CODEX_MODEL", "PI_CODEX_PROVIDER_HEADERS"]) {
+		delete env[key];
+	}
+	return env;
+}
+
+export function isConfiguredOpenAIResponsesModel(model: ExtensionContext["model"]): model is Model<any> {
+	return model?.api === "openai-responses";
 }
 
 function isOpenAICodexModel(model: ExtensionContext["model"]): boolean {
@@ -100,6 +126,33 @@ export async function resolveCodexToolProvider(ctx: ExtensionContext): Promise<C
 	};
 }
 
+export function resolveOpenAIResponsesUrl(modelBaseUrl: string | undefined): string {
+	const base = (modelBaseUrl?.trim() || "https://api.openai.com/v1").replace(/\/+$/, "");
+	try {
+		const url = new URL(base);
+		if (url.pathname === "" || url.pathname === "/") return `${base}/v1/responses`;
+	} catch {
+		// Keep string-only fallback below.
+	}
+	return base.endsWith("/responses") ? base : `${base}/responses`;
+}
+
+export async function resolveConfiguredResponsesToolProvider(ctx: ExtensionContext): Promise<ConfiguredResponsesToolProvider> {
+	const model = ctx.model as Model<any> | undefined;
+	if (!isConfiguredOpenAIResponsesModel(model)) throw new Error(CODEX_TOOL_PROVIDER_UNSUPPORTED_MESSAGE);
+	const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model);
+	if (!auth.ok) throw new Error(auth.error);
+	const token = auth.apiKey ?? headerValue(auth.headers, "Authorization")?.replace(/^Bearer\s+/i, "");
+	if (!token) throw new Error(CODEX_TOOL_PROVIDER_UNSUPPORTED_MESSAGE);
+	return {
+		baseUrl: model.baseUrl,
+		responsesUrl: resolveOpenAIResponsesUrl(model.baseUrl),
+		model: model.id,
+		token,
+		headers: headersWithoutAuthorization(auth.headers),
+	};
+}
+
 export function codexToolProviderHeaders(provider: CodexToolProvider): Headers {
 	const headers = new Headers();
 	headers.set("Authorization", `Bearer ${provider.token}`);
@@ -127,5 +180,17 @@ export function codexToolProviderEnv(provider: CodexToolProvider): NodeJS.Proces
 		PI_CODEX_BASE_URL: provider.baseUrl,
 		PI_CODEX_RESPONSES_URL: resolveCodexResponsesUrl(provider.baseUrl),
 		...(provider.model ? { PI_CODEX_MODEL: provider.model } : {}),
+	};
+}
+
+export function configuredResponsesToolProviderEnv(provider: ConfiguredResponsesToolProvider): NodeJS.ProcessEnv {
+	return {
+		...envWithoutCodexAuth(),
+		PI_CODEX_AUTH_MODE: "provider",
+		PI_CODEX_ACCESS_TOKEN: provider.token,
+		...(provider.baseUrl ? { PI_CODEX_BASE_URL: provider.baseUrl } : {}),
+		PI_CODEX_RESPONSES_URL: provider.responsesUrl,
+		...(provider.model ? { PI_CODEX_MODEL: provider.model } : {}),
+		...(provider.headers ? { PI_CODEX_PROVIDER_HEADERS: JSON.stringify(provider.headers) } : {}),
 	};
 }

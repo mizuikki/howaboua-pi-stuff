@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,6 +19,18 @@ function codexPathContext(cwd: string, model: Record<string, unknown> = {}) {
 		modelRegistry: {
 			async getApiKeyAndHeaders() {
 				return { ok: true, apiKey: "token", headers: { "chatgpt-account-id": "account" } };
+			},
+		},
+	} as never;
+}
+
+function responsesPathContext(cwd: string) {
+	return {
+		cwd,
+		model: { id: "gpt-5.4", provider: "cch-responses", api: "openai-responses", baseUrl: "http://provider.test/v1" },
+		modelRegistry: {
+			async getApiKeyAndHeaders() {
+				return { ok: true, apiKey: "provider-key", headers: { "X-Custom": "yes" } };
 			},
 		},
 	} as never;
@@ -113,6 +125,44 @@ test("exec_command injects the resolved web search model for PATH web_run", asyn
 		);
 		const text = result.content[0]?.type === "text" ? result.content[0].text : "";
 		assert.match(text, /gpt-5\.4/);
+	} finally {
+		sessions.shutdown();
+	}
+});
+
+test("exec_command injects configured provider auth for PATH web_run", async () => {
+	const cwd = mkdtempSync(join(tmpdir(), "path-web-run-provider-"));
+	const webRunPath = join(cwd, "web_run");
+	const capturePath = join(cwd, "env.json");
+	writeFileSync(
+		webRunPath,
+		`#!/usr/bin/env node
+import { writeFileSync } from "node:fs";
+writeFileSync(${JSON.stringify(capturePath)}, JSON.stringify({ mode: process.env.PI_CODEX_AUTH_MODE, token: process.env.PI_CODEX_ACCESS_TOKEN, account: process.env.PI_CODEX_ACCOUNT_ID, url: process.env.PI_CODEX_RESPONSES_URL, model: process.env.PI_CODEX_MODEL, headers: process.env.PI_CODEX_PROVIDER_HEADERS }));
+console.log(JSON.stringify({ output_text: "provider path" }));
+`,
+		{ mode: 0o755 },
+	);
+	const sessions = createExecSessionManager();
+	try {
+		let tool: any;
+		registerExecCommandTool(
+			{ registerTool(definition: unknown) { tool = definition; } } as never,
+			createExecCommandTracker(),
+			sessions,
+			{ resolveWebSearchModel: () => "gpt-5.4", allowConfiguredProvider: (model) => model?.provider === "cch-responses" },
+		);
+		const result = await tool.execute(
+			"call-1",
+			{ cmd: `PATH=${JSON.stringify(cwd)}:$PATH web_run`, max_output_tokens: 1 },
+			new AbortController().signal,
+			undefined,
+			responsesPathContext(cwd),
+		);
+		const text = result.content[0]?.type === "text" ? result.content[0].text : "";
+		const env = JSON.parse(readFileSync(capturePath, "utf8")) as Record<string, string>;
+		assert.match(text, /provider path/);
+		assert.deepEqual(env, { mode: "provider", token: "provider-key", url: "http://provider.test/v1/responses", model: "gpt-5.4", headers: JSON.stringify({ "X-Custom": "yes" }) });
 	} finally {
 		sessions.shutdown();
 	}
