@@ -6,6 +6,8 @@ import type { ResponseInput } from "openai/resources/responses/responses.js";
 import { Type } from "typebox";
 import { Container, Text } from "@earendil-works/pi-tui";
 import { codexToolProviderEnv, CODEX_TOOL_PROVIDER_UNSUPPORTED_MESSAGE, resolveCodexToolProvider } from "../../adapter/codex-tool-provider.ts";
+import type { WebSearchModel } from "../../adapter/activation/config.ts";
+import { resolveWebSearchModelSelection } from "../../adapter/openai-model-selection.ts";
 import { WEB_SEARCH_TOOL_NAME } from "../../adapter/activation/tool-set.ts";
 import { renderCodexToolCell } from "../../ui/tool-rendering/codex-tool-cell.ts";
 import { getBundledPathToolsBinDir } from "../path/binary.ts";
@@ -65,7 +67,7 @@ function webSearchCallDetail(params: Record<string, unknown>): string | undefine
 export interface WebSearchToolOptions {
 	getRecentInput?: (() => ResponseInput | undefined) | undefined;
 	sessionId?: string | undefined;
-	model?: string | (() => string | undefined) | undefined;
+	model?: WebSearchModel | ((ctx: ExtensionContext) => string | undefined) | undefined;
 	allowConfiguredProvider?: ((model: ExtensionContext["model"]) => boolean) | undefined;
 	customRendering?: boolean | undefined;
 	promptSnippet?: boolean | undefined;
@@ -179,7 +181,10 @@ export async function executeCodexWebSearch(params: Record<string, unknown>, ctx
 	const provider = await resolveCodexToolProvider(ctx);
 	const webRunPath = process.env["PI_CODEX_WEB_RUN_BIN"]?.trim() || join(getBundledPathToolsBinDir(), process.platform === "win32" ? "web_run.cmd" : "web_run");
 	const sessionId = ctx.sessionManager?.getSessionId?.() || options.sessionId;
-	const model = typeof options.model === "function" ? options.model() : options.model;
+	const modelSelection = typeof options.model === "function" ? options.model(ctx) : options.model;
+	const model = typeof modelSelection === "string"
+		? resolveWebSearchModelSelection(ctx, modelSelection, provider.model)
+		: provider.model;
 	const statePath = webRunSessionStatePath(ctx);
 	const env = { ...codexToolProviderEnv(provider), ...(statePath ? { PI_WEB_RUN_STATE_PATH: statePath } : {}) };
 	try {

@@ -6,12 +6,16 @@ import { migrateCodexConversionConfigIfNeeded } from "./config-migration.ts";
 export type CodexVerbosity = "low" | "medium" | "high";
 export type CodexAdapterMode = "normal" | "path";
 export type AllProvidersMode = "off" | "on" | "extras";
-export type CompactionModel = "gpt-5.5" | "gpt-5.3-codex-spark" | "gpt-5.4-mini";
-export type WebSearchModel = "gpt-5.5" | "gpt-5.4-mini" | "gpt-5.3-codex-spark";
+export type FixedOpenAIModelSelection = "gpt-5.5" | "gpt-5.4" | "gpt-5.4-mini" | "gpt-5.3-codex-spark";
+export type OpenAIModelSelection = "current" | FixedOpenAIModelSelection;
+export type CompactionModel = OpenAIModelSelection;
+export type WebSearchModel = OpenAIModelSelection;
 export type CompactionReasoning = "current" | "minimal" | "low" | "medium" | "high" | "xhigh";
 
-export const COMPACTION_MODELS: readonly CompactionModel[] = ["gpt-5.5", "gpt-5.3-codex-spark", "gpt-5.4-mini"];
-export const WEB_SEARCH_MODELS: readonly WebSearchModel[] = ["gpt-5.5", "gpt-5.4-mini", "gpt-5.3-codex-spark"];
+export const FIXED_OPENAI_MODEL_SELECTIONS: readonly FixedOpenAIModelSelection[] = ["gpt-5.5", "gpt-5.4", "gpt-5.4-mini", "gpt-5.3-codex-spark"];
+export const OPENAI_MODEL_SELECTIONS: readonly OpenAIModelSelection[] = ["current", ...FIXED_OPENAI_MODEL_SELECTIONS];
+export const COMPACTION_MODELS: readonly CompactionModel[] = OPENAI_MODEL_SELECTIONS;
+export const WEB_SEARCH_MODELS: readonly WebSearchModel[] = OPENAI_MODEL_SELECTIONS;
 export const COMPACTION_REASONING_LEVELS: readonly CompactionReasoning[] = ["current", "minimal", "low", "medium", "high", "xhigh"];
 
 export interface CodexConversionConfig {
@@ -93,14 +97,17 @@ export function normalizeCodexVerbosity(value: unknown): CodexVerbosity | undefi
 	return normalized === "low" || normalized === "medium" || normalized === "high" ? normalized : undefined;
 }
 
-export function normalizeCompactionModel(value: unknown): CompactionModel | undefined {
+export function normalizeOpenAIModelSelection(value: unknown): OpenAIModelSelection | undefined {
 	if (typeof value !== "string") return undefined;
-	return (COMPACTION_MODELS as readonly string[]).includes(value) ? (value as CompactionModel) : undefined;
+	return (OPENAI_MODEL_SELECTIONS as readonly string[]).includes(value) ? (value as OpenAIModelSelection) : undefined;
+}
+
+export function normalizeCompactionModel(value: unknown): CompactionModel | undefined {
+	return normalizeOpenAIModelSelection(value) as CompactionModel | undefined;
 }
 
 export function normalizeWebSearchModel(value: unknown): WebSearchModel | undefined {
-	if (typeof value !== "string") return undefined;
-	return (WEB_SEARCH_MODELS as readonly string[]).includes(value) ? (value as WebSearchModel) : undefined;
+	return normalizeOpenAIModelSelection(value) as WebSearchModel | undefined;
 }
 
 export function normalizeCompactionReasoning(value: unknown): CompactionReasoning | undefined {

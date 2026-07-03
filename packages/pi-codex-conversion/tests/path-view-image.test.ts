@@ -87,6 +87,37 @@ test("exec_command compacts PATH web_run JSON output", async () => {
 	}
 });
 
+test("exec_command injects the resolved web search model for PATH web_run", async () => {
+	const cwd = mkdtempSync(join(tmpdir(), "path-web-run-model-"));
+	const webRunPath = join(cwd, "web_run");
+	writeFileSync(
+		webRunPath,
+		`#!/usr/bin/env bash\nprintf '%s\\n' "{\\"output_text\\":\\"$PI_CODEX_MODEL\\"}"\n`,
+		{ mode: 0o755 },
+	);
+	const sessions = createExecSessionManager();
+	try {
+		let tool: any;
+		registerExecCommandTool(
+			{ registerTool(definition: unknown) { tool = definition; } } as never,
+			createExecCommandTracker(),
+			sessions,
+			{ resolveWebSearchModel: () => "gpt-5.4" },
+		);
+		const result = await tool.execute(
+			"call-1",
+			{ cmd: `PATH=${JSON.stringify(cwd)}:$PATH web_run`, max_output_tokens: 1 },
+			new AbortController().signal,
+			undefined,
+			codexPathContext(cwd),
+		);
+		const text = result.content[0]?.type === "text" ? result.content[0].text : "";
+		assert.match(text, /gpt-5\.4/);
+	} finally {
+		sessions.shutdown();
+	}
+});
+
 
 test("exec_command compacts PATH imagegen output and displays image content", async () => {
 	const cwd = mkdtempSync(join(tmpdir(), "path-imagegen-"));

@@ -18,6 +18,7 @@ import { createNativeCompactionDetails, createNativeCompactionShimResult, isNati
 import { isResponsesContext } from "../prompt/codex-model.ts";
 import { isEffectiveOpenAICodexContext, shouldUseNativeResponsesCompaction } from "../activation/activation.ts";
 import type { AdapterState } from "../activation/state.ts";
+import { resolveCompactionTargetModel } from "../openai-model-selection.ts";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return !!value && typeof value === "object" && !Array.isArray(value);
@@ -70,13 +71,12 @@ function buildCompactionTools(pi: ExtensionAPI, ctx: ExtensionContext, state: Ad
 	return convertResponsesTools(tools, { strict: null });
 }
 
-function buildCompactionReasoning(pi: ExtensionAPI, ctx: ExtensionContext, state: AdapterState, compactionModel: string): NativeCompactionRequestOptions["reasoning"] {
-	const model = ctx.model;
+function buildCompactionReasoning(pi: ExtensionAPI, ctx: ExtensionContext, state: AdapterState, compactionTargetModel: ExtensionContext["model"]): NativeCompactionRequestOptions["reasoning"] {
 	const level = state.config.openai.compactionReasoning === "current" ? pi.getThinkingLevel() : state.config.openai.compactionReasoning;
-	if (!model?.reasoning || level === "off") return undefined;
-	const clampedLevel = clampThinkingLevel(model, level as ModelThinkingLevel);
-	const rawEffort = model.thinkingLevelMap?.[clampedLevel] ?? clampedLevel;
-	const effort = typeof rawEffort === "string" && isEffectiveOpenAICodexContext(ctx, state.config) ? clampCodexReasoningEffort(compactionModel, rawEffort) : rawEffort;
+	if (!compactionTargetModel?.reasoning || level === "off") return undefined;
+	const clampedLevel = clampThinkingLevel(compactionTargetModel, level as ModelThinkingLevel);
+	const rawEffort = compactionTargetModel.thinkingLevelMap?.[clampedLevel] ?? clampedLevel;
+	const effort = typeof rawEffort === "string" && isEffectiveOpenAICodexContext(ctx, state.config) ? clampCodexReasoningEffort(compactionTargetModel.id, rawEffort) : rawEffort;
 	return effort === null ? undefined : { effort, summary: "auto" };
 }
 
@@ -98,9 +98,9 @@ function clampOpenAIPromptCacheKey(key: string): string {
 	return chars.slice(0, OPENAI_PROMPT_CACHE_KEY_MAX_LENGTH).join("");
 }
 
-function buildCompactionRequestOptions(pi: ExtensionAPI, ctx: ExtensionContext, state: AdapterState, compactionModel: string): NativeCompactionRequestOptions {
+function buildCompactionRequestOptions(pi: ExtensionAPI, ctx: ExtensionContext, state: AdapterState, compactionTargetModel: ExtensionContext["model"]): NativeCompactionRequestOptions {
 	const tools = buildCompactionTools(pi, ctx, state);
-	const reasoning = buildCompactionReasoning(pi, ctx, state, compactionModel);
+	const reasoning = buildCompactionReasoning(pi, ctx, state, compactionTargetModel);
 	return {
 		parallel_tool_calls: true,
 		prompt_cache_key: clampOpenAIPromptCacheKey(ctx.sessionManager.getSessionId()),
@@ -196,9 +196,9 @@ async function handleCodexSessionBeforeCompactInner(event: SessionBeforeCompactE
 	}
 
 	const runtime = resolution.runtime;
-	const compactionModel = state.config.openai.compactionModel;
-	const compactionTargetModel = { ...runtime.currentModel, id: compactionModel };
-	const requestOptions = buildCompactionRequestOptions(pi, ctx, state, compactionModel);
+	const compactionTargetModel = resolveCompactionTargetModel(ctx, runtime.currentModel, state.config.openai.compactionModel);
+	const compactionModel = compactionTargetModel.id;
+	const requestOptions = buildCompactionRequestOptions(pi, ctx, state, compactionTargetModel);
 	const branchEntries = ctx.sessionManager.getBranch();
 	const latestNativeCompaction = resolveLatestNativeCompactionEntry(branchEntries, {
 		provider: runtime.provider,

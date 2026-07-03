@@ -1,4 +1,4 @@
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { Model } from "@earendil-works/pi-ai";
 import { Box, Text, truncateToWidth } from "@earendil-works/pi-tui";
 import { getDefaultCodexRuntimeShell } from "./adapter/prompt/runtime-shell.ts";
@@ -15,6 +15,7 @@ import { buildRecentWebSearchInput, registerWebSearchTool } from "./tools/web-ru
 import { registerWriteStdinTool } from "./tools/exec/write-stdin-tool.ts";
 import { createBundledPathToolsEnv } from "./tools/path/binary.ts";
 import { readCodexConversionConfig } from "./adapter/activation/config.ts";
+import { resolveWebSearchModelSelection } from "./adapter/openai-model-selection.ts";
 import { syncAdapter, mergeAdapterTools, restoreTools, stripAdapterTools, shouldUseCodexAdapter } from "./adapter/activation/activation.ts";
 import { rewriteCodexProviderRequest } from "./adapter/provider-request.ts";
 import { handleCodexSessionBeforeCompact } from "./adapter/compaction/compaction.ts";
@@ -49,7 +50,7 @@ function isToolCallOnlyAssistantMessage(message: unknown): boolean {
 export default function codexConversion(pi: ExtensionAPI) {
 	const tracker = createExecCommandTracker();
 	const state: AdapterState = { enabled: false, cwd: process.cwd(), promptSkills: [], config: readCodexConversionConfig() };
-	const sessions = createExecSessionManager({ env: createBundledPathToolsEnv({ ...process.env, PI_CODEX_MODEL: state.config.openai.webSearchModel }) });
+	const sessions = createExecSessionManager({ env: createBundledPathToolsEnv({ ...process.env }) });
 	const backgroundBashWidget: BackgroundBashWidgetState = { folded: true };
 	const registeredNativeWebSearchTools = new Set<string>();
 	let latestRecentWebSearchInput: ResponseInput | undefined;
@@ -68,12 +69,17 @@ export default function codexConversion(pi: ExtensionAPI) {
 	}
 
 	function bundledPathToolsEnv(config = state.config): NodeJS.ProcessEnv {
-		return createBundledPathToolsEnv({ ...process.env, PI_CODEX_MODEL: config.openai.webSearchModel });
+		void config;
+		return createBundledPathToolsEnv({ ...process.env });
+	}
+
+	function resolveConfiguredWebSearchModel(ctx: ExtensionContext, config = state.config): string | undefined {
+		return resolveWebSearchModelSelection(ctx, config.openai.webSearchModel, /*fallbackModel*/ undefined);
 	}
 
 	function registerCoreTools(config = state.config): void {
 		registerApplyPatchTool(pi, { ...promptSnippetOptions(config), showDiffWhenCollapsed: showCollapsedPatchDiff(config) });
-		registerExecCommandTool(pi, tracker, sessions, { describeImagesForTextModels: config.tools.viewImageFallback, ...customRenderingOptions(config), ...promptSnippetOptions(config), showOutputWhenCollapsed: config.mode === "normal", compactTools: config.ui.compactTools });
+		registerExecCommandTool(pi, tracker, sessions, { describeImagesForTextModels: config.tools.viewImageFallback, resolveWebSearchModel: (ctx) => resolveConfiguredWebSearchModel(ctx, config), ...customRenderingOptions(config), ...promptSnippetOptions(config), showOutputWhenCollapsed: config.mode === "normal", compactTools: config.ui.compactTools });
 		registerWriteStdinTool(pi, sessions, { describeImagesForTextModels: config.tools.viewImageFallback, ...promptSnippetOptions(config) });
 		registerViewImageTool(pi, { describeForTextModels: config.tools.viewImageFallback, ...customRenderingOptions(config), ...promptSnippetOptions(config) });
 	}
@@ -86,7 +92,7 @@ export default function codexConversion(pi: ExtensionAPI) {
 		};
 		if (config.tools.webRun || config.tools.webRunOnly) {
 			const webSearchToolName = WEB_SEARCH_TOOL_NAME;
-			registerWebSearchTool(pi, webSearchToolName, { getRecentInput: () => latestRecentWebSearchInput, model: () => state.config.openai.webSearchModel, allowConfiguredProvider, ...customRenderingOptions(config), ...promptSnippetOptions(config) });
+			registerWebSearchTool(pi, webSearchToolName, { getRecentInput: () => latestRecentWebSearchInput, model: (ctx) => resolveConfiguredWebSearchModel(ctx, config), allowConfiguredProvider, ...customRenderingOptions(config), ...promptSnippetOptions(config) });
 			registeredNativeWebSearchTools.add(webSearchToolName);
 		}
 		if (config.tools.imageGeneration || config.tools.imageGenerationOnly) {

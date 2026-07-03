@@ -2,6 +2,7 @@ import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { Model } from "@earendil-works/pi-ai";
 import { DEFAULT_CODEX_BASE_URL } from "../providers/openai-codex/constants.ts";
 import { extractAccountId } from "../providers/openai-codex/headers.ts";
+import { firstUsableOpenAICodexModel } from "./openai-model-selection.ts";
 
 export const CODEX_TOOL_PROVIDER_UNSUPPORTED_MESSAGE = "web_run/imagegen requires an OpenAI Codex-compatible Responses provider or /login openai-codex";
 
@@ -70,9 +71,11 @@ function resolveOpenAICodexAuthModel(ctx: ExtensionContext): Model<any> | undefi
 	const currentId = ctx.model?.id;
 	const direct = currentId ? registry.find?.(OPENAI_CODEX_PROVIDER, currentId) : undefined;
 	if (isUsableOpenAICodexModel(direct)) return direct;
-	const preferred = ["gpt-5.4-mini", "gpt-5.5", "gpt-5.3-codex-spark"]
-		.map((id) => registry.find?.(OPENAI_CODEX_PROVIDER, id))
-		.find((model): model is Model<any> => isUsableOpenAICodexModel(model));
+	const preferred = firstUsableOpenAICodexModel(
+		ctx,
+		["gpt-5.4", "gpt-5.5", "gpt-5.4-mini", "gpt-5.3-codex-spark"],
+		isUsableOpenAICodexModel,
+	);
 	if (preferred) return preferred;
 	const available = registry.getAvailable?.();
 	if (available) return firstOpenAICodexModel(available);
