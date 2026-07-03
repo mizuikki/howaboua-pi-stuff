@@ -5,7 +5,7 @@ use std::sync::Arc;
 use anyhow::Context;
 use reqwest::header::{ACCEPT, CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue, USER_AGENT};
 
-use crate::auth::CodexAuth;
+use crate::auth::{CodexAuth, uses_configured_provider_auth};
 use crate::cloudflare::CHATGPT_CLOUDFLARE_COOKIE_STORE;
 use crate::{DEFAULT_BASE_URL, DEFAULT_ORIGINATOR};
 
@@ -52,12 +52,6 @@ pub fn headers(auth: &CodexAuth) -> anyhow::Result<HeaderMap> {
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
     headers.insert(ACCEPT, HeaderValue::from_static("text/event-stream"));
     Ok(headers)
-}
-
-fn uses_configured_provider_auth() -> bool {
-    env::var("PI_CODEX_AUTH_MODE")
-        .ok()
-        .is_some_and(|mode| mode.eq_ignore_ascii_case("provider"))
 }
 
 fn configured_provider_headers() -> anyhow::Result<HeaderMap> {

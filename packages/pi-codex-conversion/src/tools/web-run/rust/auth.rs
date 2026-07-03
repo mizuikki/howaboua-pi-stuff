@@ -322,16 +322,24 @@ async fn refresh_pi_codex_auth(
     })
 }
 
-fn uses_configured_provider_auth() -> bool {
+pub(crate) fn uses_configured_provider_auth() -> bool {
     env::var("PI_CODEX_AUTH_MODE")
         .ok()
         .is_some_and(|mode| mode.eq_ignore_ascii_case("provider"))
 }
 
+fn provider_access_token() -> anyhow::Result<String> {
+    let token = env::var("PI_CODEX_ACCESS_TOKEN")
+        .context("PI_CODEX_AUTH_MODE=provider requires PI_CODEX_ACCESS_TOKEN")?;
+    if token.trim().is_empty() {
+        anyhow::bail!("PI_CODEX_AUTH_MODE=provider requires a non-empty PI_CODEX_ACCESS_TOKEN");
+    }
+    Ok(token)
+}
+
 pub async fn read_codex_auth() -> anyhow::Result<CodexAuth> {
     if uses_configured_provider_auth() {
-        let token = env::var("PI_CODEX_ACCESS_TOKEN")
-            .context("PI_CODEX_AUTH_MODE=provider requires PI_CODEX_ACCESS_TOKEN")?;
+        let token = provider_access_token()?;
         return Ok(CodexAuth::Bearer {
             token,
             account_id: None,
