@@ -5,12 +5,13 @@ import type { ExtensionAPI, ExtensionContext, ToolDefinition } from "@earendil-w
 import type { ResponseInput } from "openai/resources/responses/responses.js";
 import { Type } from "typebox";
 import { Container, Text } from "@earendil-works/pi-tui";
-import { codexToolProviderEnv, CODEX_TOOL_PROVIDER_UNSUPPORTED_MESSAGE, resolveCodexToolProvider } from "../../adapter/codex-tool-provider.ts";
-import type { WebSearchModel } from "../../adapter/activation/config.ts";
+import { CODEX_TOOL_PROVIDER_UNSUPPORTED_MESSAGE } from "../../adapter/codex-tool-provider.ts";
+import type { WebSearchAuthMode, WebSearchModel } from "../../adapter/activation/config.ts";
 import { resolveWebSearchModelSelection } from "../../adapter/openai-model-selection.ts";
 import { WEB_SEARCH_TOOL_NAME } from "../../adapter/activation/tool-set.ts";
 import { renderCodexToolCell } from "../../ui/tool-rendering/codex-tool-cell.ts";
 import { getBundledPathToolsBinDir } from "../path/binary.ts";
+import { resolveWebRunToolProvider } from "./provider.ts";
 
 export const WEB_SEARCH_UNSUPPORTED_MESSAGE = CODEX_TOOL_PROVIDER_UNSUPPORTED_MESSAGE;
 export const WEB_SEARCH_SESSION_NOTE_TYPE = "codex-web-search-session-note";
@@ -68,6 +69,7 @@ export interface WebSearchToolOptions {
 	getRecentInput?: (() => ResponseInput | undefined) | undefined;
 	sessionId?: string | undefined;
 	model?: WebSearchModel | ((ctx: ExtensionContext) => string | undefined) | undefined;
+	authMode?: WebSearchAuthMode | undefined;
 	allowConfiguredProvider?: ((model: ExtensionContext["model"]) => boolean) | undefined;
 	customRendering?: boolean | undefined;
 	promptSnippet?: boolean | undefined;
@@ -178,7 +180,7 @@ export function supportsMultimodalNativeWebSearch(model: ExtensionContext["model
 }
 
 export async function executeCodexWebSearch(params: Record<string, unknown>, ctx: ExtensionContext, signal: AbortSignal | undefined | null, options: WebSearchToolOptions = {}): Promise<WebRunExecutionResult> {
-	const provider = await resolveCodexToolProvider(ctx);
+	const provider = await resolveWebRunToolProvider(ctx, { allowConfiguredProvider: options.allowConfiguredProvider, authMode: options.authMode });
 	const webRunPath = process.env["PI_CODEX_WEB_RUN_BIN"]?.trim() || join(getBundledPathToolsBinDir(), process.platform === "win32" ? "web_run.cmd" : "web_run");
 	const sessionId = ctx.sessionManager?.getSessionId?.() || options.sessionId;
 	const configuredModel = typeof options.model === "function" ? options.model(ctx)?.trim() : undefined;
@@ -186,7 +188,7 @@ export async function executeCodexWebSearch(params: Record<string, unknown>, ctx
 		? configuredModel
 		: resolveWebSearchModelSelection(ctx, typeof options.model === "string" ? options.model : undefined, provider.model);
 	const statePath = webRunSessionStatePath(ctx);
-	const env = { ...codexToolProviderEnv(provider), ...(statePath ? { PI_WEB_RUN_STATE_PATH: statePath } : {}) };
+	const env = { ...provider.env, ...(statePath ? { PI_WEB_RUN_STATE_PATH: statePath } : {}) };
 	try {
 		const input = options.getRecentInput?.();
 		const stdout = await runWebRunBinary(webRunPath, { ...params, id: sessionId, ...(model ? { model } : {}), ...(input ? { input } : {}) }, env, signal);

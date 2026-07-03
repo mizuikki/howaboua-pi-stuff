@@ -1,8 +1,9 @@
+use std::collections::BTreeMap;
 use std::env;
 use std::sync::Arc;
 
 use anyhow::Context;
-use reqwest::header::{ACCEPT, CONTENT_TYPE, HeaderMap, HeaderValue, USER_AGENT};
+use reqwest::header::{ACCEPT, CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue, USER_AGENT};
 
 use crate::auth::CodexAuth;
 use crate::cloudflare::CHATGPT_CLOUDFLARE_COOKIE_STORE;
@@ -33,29 +34,60 @@ pub fn responses_url_from_base(base: &str) -> String {
 }
 
 pub fn headers(auth: &CodexAuth) -> anyhow::Result<HeaderMap> {
-    let mut headers = HeaderMap::new();
+    let mut headers = configured_provider_headers()?;
     headers.insert(
         "Authorization",
         HeaderValue::from_str(&auth.authorization_header()?)?,
     );
-    headers.insert(
-        "ChatGPT-Account-ID",
-        HeaderValue::from_str(auth.account_id())?,
-    );
+    if let Some(account_id) = auth.account_id() {
+        headers.insert("ChatGPT-Account-ID", HeaderValue::from_str(account_id)?);
+        headers.insert(
+            "OpenAI-Beta",
+            HeaderValue::from_static("responses=experimental"),
+        );
+    }
     if auth.is_fedramp_account() {
         headers.insert("X-OpenAI-Fedramp", HeaderValue::from_static("true"));
     }
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
     headers.insert(ACCEPT, HeaderValue::from_static("text/event-stream"));
-    headers.insert(
-        "OpenAI-Beta",
-        HeaderValue::from_static("responses=experimental"),
-    );
+    Ok(headers)
+}
+
+fn uses_configured_provider_auth() -> bool {
+    env::var("PI_CODEX_AUTH_MODE")
+        .ok()
+        .is_some_and(|mode| mode.eq_ignore_ascii_case("provider"))
+}
+
+fn configured_provider_headers() -> anyhow::Result<HeaderMap> {
+    let mut headers = HeaderMap::new();
+    let Ok(raw) = env::var("PI_CODEX_PROVIDER_HEADERS") else {
+        return Ok(headers);
+    };
+    if raw.trim().is_empty() {
+        return Ok(headers);
+    }
+    let parsed: BTreeMap<String, String> =
+        serde_json::from_str(&raw).context("failed to parse PI_CODEX_PROVIDER_HEADERS")?;
+    for (key, value) in parsed {
+        if key.eq_ignore_ascii_case("authorization") || value.trim().is_empty() {
+            continue;
+        }
+        let name = HeaderName::from_bytes(key.as_bytes())
+            .with_context(|| format!("invalid provider header name `{key}`"))?;
+        let value = HeaderValue::from_str(&value)
+            .with_context(|| format!("invalid provider header value for `{key}`"))?;
+        headers.insert(name, value);
+    }
     Ok(headers)
 }
 
 fn default_headers() -> HeaderMap {
     let mut headers = HeaderMap::new();
+    if uses_configured_provider_auth() {
+        return headers;
+    }
     let originator = env::var("CODEX_INTERNAL_ORIGINATOR_OVERRIDE")
         .unwrap_or_else(|_| DEFAULT_ORIGINATOR.to_string());
     if let Ok(value) = HeaderValue::from_str(&originator) {

@@ -1,17 +1,19 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import type { Model } from "@earendil-works/pi-ai";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { buildRecentWebSearchInput, createWebSearchTool, executeCodexWebSearch } from "../src/tools/web-run/tool.ts";
+import { resolveWebRunToolProvider } from "../src/tools/web-run/provider.ts";
 
 
 function fakeJwt(accountId: string): string {
 	return ["header", Buffer.from(JSON.stringify({ "https://api.openai.com/auth": { chatgpt_account_id: accountId } })).toString("base64url"), "signature"].join(".");
 }
 
-function createContext(options: { token?: string; accountId?: string; baseUrl?: string; model?: string; provider?: string; api?: string; headers?: Record<string, string>; sessionFile?: string; sessionId?: string } = {}) {
-	const token = options.token ?? fakeJwt(options.accountId ?? "acct-from-token");
+function createContext(options: { token?: string; apiKey?: string; accountId?: string; baseUrl?: string; model?: string; provider?: string; api?: string; headers?: Record<string, string>; sessionFile?: string; sessionId?: string } = {}) {
+	const token = options.token ?? options.apiKey ?? fakeJwt(options.accountId ?? "acct-from-token");
 	return {
 		cwd: process.cwd(),
 		...(options.sessionFile || options.sessionId ? { sessionManager: {
@@ -28,7 +30,7 @@ function createContext(options: { token?: string; accountId?: string; baseUrl?: 
 			async getApiKeyAndHeaders() {
 				return {
 					ok: true,
-					apiKey: options.headers ? undefined : token,
+					apiKey: options.apiKey ?? (options.headers ? undefined : token),
 					headers: options.headers ?? (options.accountId ? { "chatgpt-account-id": options.accountId } : {}),
 				};
 			},
@@ -131,6 +133,75 @@ process.stdin.on("end", () => {
 		if (originalBin === undefined) delete process.env["PI_CODEX_WEB_RUN_BIN"];
 		else process.env["PI_CODEX_WEB_RUN_BIN"] = originalBin;
 	}
+});
+
+test("executeCodexWebSearch can use a configured OpenAI Responses provider", async () => {
+	const originalEnv = { PI_CODEX_WEB_RUN_BIN: process.env["PI_CODEX_WEB_RUN_BIN"], PI_CODEX_ACCESS_TOKEN: process.env["PI_CODEX_ACCESS_TOKEN"], PI_CODEX_ACCOUNT_ID: process.env["PI_CODEX_ACCOUNT_ID"], PI_CODEX_AGENT_IDENTITY_JWT: process.env["PI_CODEX_AGENT_IDENTITY_JWT"], PI_CODEX_AUTH_MODE: process.env["PI_CODEX_AUTH_MODE"], PI_CODEX_PROVIDER_HEADERS: process.env["PI_CODEX_PROVIDER_HEADERS"] };
+	try {
+		await withMockWebRun(`#!/usr/bin/env node
+import { writeFileSync } from "node:fs";
+let input = "";
+process.stdin.on("data", (chunk) => input += chunk);
+process.stdin.on("end", () => {
+  writeFileSync(process.env.CAPTURE_PATH, JSON.stringify({ env: process.env, input: JSON.parse(input) }));
+  console.log(JSON.stringify({ output_text: "provider search" }));
+});
+`, async (webRunPath) => {
+			const capturePath = join(tmpdir(), `pi-web-run-provider-${Date.now()}.json`);
+			process.env["PI_CODEX_WEB_RUN_BIN"] = webRunPath;
+			process.env["PI_CODEX_ACCOUNT_ID"] = "stale-account";
+			process.env["PI_CODEX_AGENT_IDENTITY_JWT"] = "stale-agent-jwt";
+			process.env["CAPTURE_PATH"] = capturePath;
+			const output = await executeCodexWebSearch(
+				{ search_query: [{ q: "OpenAI" }] },
+				createContext({ provider: "cch-responses", api: "openai-responses", model: "gpt-5.4", baseUrl: "http://provider.test/v1", apiKey: "provider-key", headers: { "User-Agent": "provider-agent", "X-Custom": "yes" } }),
+				undefined,
+				{ model: "current", allowConfiguredProvider: (model) => model?.provider === "cch-responses" },
+			);
+			assert.equal(output.text, "provider search");
+			const captured = JSON.parse(await readFile(capturePath, "utf8")) as { env: Record<string, string>; input: Record<string, unknown> };
+			assert.equal(captured.env["PI_CODEX_AUTH_MODE"], "provider");
+			assert.equal(captured.env["PI_CODEX_ACCESS_TOKEN"], "provider-key");
+			assert.equal(captured.env["PI_CODEX_ACCOUNT_ID"], undefined);
+			assert.equal(captured.env["PI_CODEX_AGENT_IDENTITY_JWT"], undefined);
+			assert.equal(captured.env["PI_CODEX_RESPONSES_URL"], "http://provider.test/v1/responses");
+			assert.equal(captured.env["PI_CODEX_MODEL"], "gpt-5.4");
+			assert.deepEqual(JSON.parse(captured.env["PI_CODEX_PROVIDER_HEADERS"] ?? "{}"), { "User-Agent": "provider-agent", "X-Custom": "yes" });
+			assert.equal(captured.input["model"], "gpt-5.4");
+		});
+	} finally {
+		for (const [key, value] of Object.entries(originalEnv)) {
+			if (value === undefined) delete process.env[key];
+			else process.env[key] = value;
+		}
+	}
+});
+
+test("resolveWebRunToolProvider can force Codex auth for configured providers", async () => {
+	const codexModel = {
+		id: "gpt-5.4",
+		provider: "openai-codex",
+		api: "openai-codex-responses",
+		baseUrl: "https://chatgpt.com/backend-api/codex/responses",
+	} as Model<any>;
+	const provider = await resolveWebRunToolProvider({
+		cwd: process.cwd(),
+		model: { id: "gpt-5.4", provider: "cch-responses", api: "openai-responses", baseUrl: "http://provider.test/v1" },
+		modelRegistry: {
+			find(providerId: string, modelId: string) {
+				return providerId === "openai-codex" && modelId === "gpt-5.4" ? codexModel : undefined;
+			},
+			async getApiKeyAndHeaders(model: Model<any>) {
+				if (model.provider === "openai-codex") {
+					return { ok: true, apiKey: fakeJwt("codex-account"), headers: {} };
+				}
+				return { ok: true, apiKey: "provider-key", headers: { "X-Custom": "yes" } };
+			},
+		},
+	} as never, { allowConfiguredProvider: (model) => model?.provider === "cch-responses", authMode: "codex" });
+	assert.equal(provider.env["PI_CODEX_AUTH_MODE"], undefined);
+	assert.equal(provider.env["PI_CODEX_ACCOUNT_ID"], "codex-account");
+	assert.equal(provider.env["PI_CODEX_RESPONSES_URL"], "https://chatgpt.com/backend-api/codex/responses");
 });
 
 test("executeCodexWebSearch uses the trimmed model returned by a callback", async () => {

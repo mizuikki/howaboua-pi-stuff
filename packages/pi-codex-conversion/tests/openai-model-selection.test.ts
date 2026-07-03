@@ -14,11 +14,13 @@ function context(model: Model<any> | Record<string, unknown>, registry: ModelReg
 test("grouped config accepts current and gpt-5.4 model selections", () => {
 	const config = normalizeCodexConversionConfig({
 		openai: {
+			webSearchAuth: "codex",
 			webSearchModel: "current",
 			compactionModel: "gpt-5.4",
 		},
 	});
 
+	assert.equal(config.openai.webSearchAuth, "codex");
 	assert.equal(config.openai.webSearchModel, "current");
 	assert.equal(config.openai.compactionModel, "gpt-5.4");
 });

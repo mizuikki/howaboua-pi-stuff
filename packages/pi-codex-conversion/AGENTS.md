@@ -9,5 +9,5 @@
 - PATH tool build notes live in `PATH_TOOLS.md`.
 - For `GLIBC_* not found`, loader errors, `exec_bridge` startup failures, or bundled binary incompatibility: read `PATH_TOOLS.md`, rebuild the failing local-platform binary, and wire Pi to the checkout instead of patching installed npm files.
 - Keep prompt guidance short and argv-shaped. Normal mode uses flat TS tools; PATH mode uses shell commands.
-- Call out intentional divergences: PATH web/image tools are local wrappers around Codex-backed requests, not provider-native function tools.
+- Call out intentional divergences: PATH web/image tools are local wrappers, not provider-native function tools.
 - Do not accept review-bot drift from stock Pi behavior unless backend-verified or intentional.

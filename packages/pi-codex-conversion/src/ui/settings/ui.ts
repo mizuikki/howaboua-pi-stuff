@@ -4,11 +4,13 @@ import {
 	COMPACTION_MODELS,
 	COMPACTION_REASONING_LEVELS,
 	DEFAULT_CODEX_CONVERSION_CONFIG,
+	WEB_SEARCH_AUTH_MODES,
 	WEB_SEARCH_MODELS,
 	normalizeCodexVerbosity,
 	normalizeCompactionModel,
 	normalizeCompactionReasoning,
 	normalizeProviderList,
+	normalizeWebSearchAuthMode,
 	normalizeWebSearchModel,
 	readCodexConversionConfig,
 	type CodexConversionConfig,
@@ -237,6 +239,7 @@ function buildItems(tab: SettingsTab, draft: CodexConversionConfig, theme: Theme
 			{ id: "fast", label: "Fast mode", currentValue: draft.openai.fast ? "on" : "off", values: ["off", "on"] },
 			{ id: "verbosity", label: "Verbosity", currentValue: draft.openai.verbosity, values: ["low", "medium", "high"] },
 			{ id: "forceCachedWebSockets", label: "Cached websocket upgrade", currentValue: draft.openai.forceCachedWebSockets ? "on" : "off", values: ["off", "on"] },
+			{ id: "webSearchAuth", label: "Web search auth", currentValue: draft.openai.webSearchAuth, values: [...WEB_SEARCH_AUTH_MODES] },
 			{ id: "webSearchModel", label: "Web search model", currentValue: draft.openai.webSearchModel, values: [...WEB_SEARCH_MODELS] },
 			{ id: "compactionModel", label: "Compaction model", currentValue: draft.openai.compactionModel, values: [...COMPACTION_MODELS] },
 			{ id: "compactionReasoning", label: "Compaction reasoning", currentValue: draft.openai.compactionReasoning, values: [...COMPACTION_REASONING_LEVELS] },
@@ -250,7 +253,7 @@ function buildItems(tab: SettingsTab, draft: CodexConversionConfig, theme: Theme
 			id: "additionalProviders",
 			label: "Additional providers",
 			currentValue: formatProviderList(draft.scope.additionalProviders),
-			submenu: (currentValue, done) => new TextSettingSubmenu("Additional providers", "Comma-separated provider ids that should also use the selected adapter mode.", currentValue, (value) => done(formatProviderList(normalizeProviderListFromText(value))), () => done(), theme),
+			submenu: (currentValue, done) => new TextSettingSubmenu("Additional providers", "Comma-separated provider ids that should also use the selected adapter mode. Configured openai-responses providers can also power web_run when Web search auth is auto.", currentValue, (value) => done(formatProviderList(normalizeProviderListFromText(value))), () => done(), theme),
 		},
 		{ id: "statusLine", label: "Statusline", currentValue: draft.ui.statusLine ? "on" : "off", values: ["off", "on"] },
 		{ id: "toolRenaming", label: "Tool renaming", currentValue: draft.ui.toolRenaming ? "on" : "off", values: ["off", "on"] },
@@ -279,6 +282,7 @@ function applySettingChange(id: string, value: string, draft: CodexConversionCon
 	if (id === "imageGenerationOnly") return { ...draft, tools: { ...draft.tools, imageGenerationOnly: value === "on" } };
 	if (id === "fast") return { ...draft, openai: { ...draft.openai, fast: value === "on" } };
 	if (id === "forceCachedWebSockets") return { ...draft, openai: { ...draft.openai, forceCachedWebSockets: value === "on" } };
+	if (id === "webSearchAuth") return { ...draft, openai: { ...draft.openai, webSearchAuth: normalizeWebSearchAuthMode(value) ?? DEFAULT_CODEX_CONVERSION_CONFIG.openai.webSearchAuth } };
 	if (id === "webSearchModel") return { ...draft, openai: { ...draft.openai, webSearchModel: normalizeWebSearchModel(value) ?? DEFAULT_CODEX_CONVERSION_CONFIG.openai.webSearchModel } };
 	if (id === "compactionModel") return { ...draft, openai: { ...draft.openai, compactionModel: normalizeCompactionModel(value) ?? DEFAULT_CODEX_CONVERSION_CONFIG.openai.compactionModel } };
 	if (id === "compactionReasoning") return { ...draft, openai: { ...draft.openai, compactionReasoning: normalizeCompactionReasoning(value) ?? DEFAULT_CODEX_CONVERSION_CONFIG.openai.compactionReasoning } };

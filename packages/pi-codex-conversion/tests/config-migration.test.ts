@@ -34,6 +34,7 @@ test("old flat config migrates to grouped config and respects disabled provider 
 	assert.equal(config.openai.fast, true);
 	assert.equal(config.openai.verbosity, "high");
 	assert.equal(config.openai.forceCachedWebSockets, false);
+	assert.equal(config.openai.webSearchAuth, "auto");
 	assert.equal(config.openai.webSearchModel, "gpt-5.4-mini");
 	assert.equal(config.openai.compactionModel, "gpt-5.5");
 	assert.equal(config.openai.compactionReasoning, "medium");
