@@ -181,10 +181,10 @@ export async function executeCodexWebSearch(params: Record<string, unknown>, ctx
 	const provider = await resolveCodexToolProvider(ctx);
 	const webRunPath = process.env["PI_CODEX_WEB_RUN_BIN"]?.trim() || join(getBundledPathToolsBinDir(), process.platform === "win32" ? "web_run.cmd" : "web_run");
 	const sessionId = ctx.sessionManager?.getSessionId?.() || options.sessionId;
-	const modelSelection = typeof options.model === "function" ? options.model(ctx) : options.model;
-	const model = typeof modelSelection === "string"
-		? resolveWebSearchModelSelection(ctx, modelSelection, provider.model)
-		: provider.model;
+	const configuredModel = typeof options.model === "function" ? options.model(ctx)?.trim() : undefined;
+	const model = configuredModel
+		? configuredModel
+		: resolveWebSearchModelSelection(ctx, typeof options.model === "string" ? options.model : undefined, provider.model);
 	const statePath = webRunSessionStatePath(ctx);
 	const env = { ...codexToolProviderEnv(provider), ...(statePath ? { PI_WEB_RUN_STATE_PATH: statePath } : {}) };
 	try {

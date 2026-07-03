@@ -1,10 +1,11 @@
 import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { Api, Model } from "@earendil-works/pi-ai";
 import type { OpenAIModelSelection } from "./activation/config.ts";
+import { OPENAI_CODEX_PROVIDER } from "./codex-provider-constants.ts";
 
 type RuntimeModel = Model<Api>;
 
-type ModelRegistryLike = {
+export type ModelRegistryLike = {
 	find?: (provider: string, modelId: string) => RuntimeModel | undefined;
 	getAvailable?: () => RuntimeModel[];
 	getAll?: () => RuntimeModel[];
@@ -34,7 +35,7 @@ export function findModelInRegistry(
 
 export function resolveWebSearchModelSelection(
 	ctx: ExtensionContext,
-	selection: OpenAIModelSelection | string | undefined,
+	selection: OpenAIModelSelection | undefined,
 	fallbackModel: string | undefined,
 ): string | undefined {
 	if (!selection) return normalizeModelId(fallbackModel);
@@ -61,7 +62,7 @@ export function firstUsableOpenAICodexModel(
 ): RuntimeModel | undefined {
 	const registry = modelRegistry(ctx);
 	const direct = modelIds
-		.map((modelId) => registry.find?.("openai-codex", modelId))
+		.map((modelId) => registry.find?.(OPENAI_CODEX_PROVIDER, modelId))
 		.find((model): model is RuntimeModel => Boolean(model && isUsableModel(model)));
 	if (direct) return direct;
 	const available = registry.getAvailable?.();

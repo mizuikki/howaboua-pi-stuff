@@ -73,13 +73,13 @@ export default function codexConversion(pi: ExtensionAPI) {
 		return createBundledPathToolsEnv({ ...process.env });
 	}
 
-	function resolveConfiguredWebSearchModel(ctx: ExtensionContext, config = state.config): string | undefined {
-		return resolveWebSearchModelSelection(ctx, config.openai.webSearchModel, /*fallbackModel*/ undefined);
+	function resolveConfiguredWebSearchModel(ctx: ExtensionContext): string | undefined {
+		return resolveWebSearchModelSelection(ctx, state.config.openai.webSearchModel, /*fallbackModel*/ undefined);
 	}
 
 	function registerCoreTools(config = state.config): void {
 		registerApplyPatchTool(pi, { ...promptSnippetOptions(config), showDiffWhenCollapsed: showCollapsedPatchDiff(config) });
-		registerExecCommandTool(pi, tracker, sessions, { describeImagesForTextModels: config.tools.viewImageFallback, resolveWebSearchModel: (ctx) => resolveConfiguredWebSearchModel(ctx, config), ...customRenderingOptions(config), ...promptSnippetOptions(config), showOutputWhenCollapsed: config.mode === "normal", compactTools: config.ui.compactTools });
+		registerExecCommandTool(pi, tracker, sessions, { describeImagesForTextModels: config.tools.viewImageFallback, resolveWebSearchModel: resolveConfiguredWebSearchModel, ...customRenderingOptions(config), ...promptSnippetOptions(config), showOutputWhenCollapsed: config.mode === "normal", compactTools: config.ui.compactTools });
 		registerWriteStdinTool(pi, sessions, { describeImagesForTextModels: config.tools.viewImageFallback, ...promptSnippetOptions(config) });
 		registerViewImageTool(pi, { describeForTextModels: config.tools.viewImageFallback, ...customRenderingOptions(config), ...promptSnippetOptions(config) });
 	}
@@ -92,7 +92,7 @@ export default function codexConversion(pi: ExtensionAPI) {
 		};
 		if (config.tools.webRun || config.tools.webRunOnly) {
 			const webSearchToolName = WEB_SEARCH_TOOL_NAME;
-			registerWebSearchTool(pi, webSearchToolName, { getRecentInput: () => latestRecentWebSearchInput, model: (ctx) => resolveConfiguredWebSearchModel(ctx, config), allowConfiguredProvider, ...customRenderingOptions(config), ...promptSnippetOptions(config) });
+			registerWebSearchTool(pi, webSearchToolName, { getRecentInput: () => latestRecentWebSearchInput, model: resolveConfiguredWebSearchModel, allowConfiguredProvider, ...customRenderingOptions(config), ...promptSnippetOptions(config) });
 			registeredNativeWebSearchTools.add(webSearchToolName);
 		}
 		if (config.tools.imageGeneration || config.tools.imageGenerationOnly) {

@@ -2,7 +2,8 @@ import type { ExtensionContext } from "@earendil-works/pi-coding-agent";
 import type { Model } from "@earendil-works/pi-ai";
 import { DEFAULT_CODEX_BASE_URL } from "../providers/openai-codex/constants.ts";
 import { extractAccountId } from "../providers/openai-codex/headers.ts";
-import { firstUsableOpenAICodexModel } from "./openai-model-selection.ts";
+import { OPENAI_CODEX_PROVIDER } from "./codex-provider-constants.ts";
+import { firstUsableOpenAICodexModel, type ModelRegistryLike } from "./openai-model-selection.ts";
 
 export const CODEX_TOOL_PROVIDER_UNSUPPORTED_MESSAGE = "web_run/imagegen requires an OpenAI Codex-compatible Responses provider or /login openai-codex";
 
@@ -14,7 +15,6 @@ export interface CodexToolProvider {
 }
 
 const CODEX_ORIGINATOR = "codex_cli_rs";
-const OPENAI_CODEX_PROVIDER = "openai-codex";
 
 export function resolveCodexApiProviderBaseUrl(modelBaseUrl: string | undefined): string {
 	const base = modelBaseUrl?.trim() || DEFAULT_CODEX_BASE_URL;
@@ -63,11 +63,7 @@ function firstOpenAICodexModel(models: Model<any>[]): Model<any> | undefined {
 }
 
 function resolveOpenAICodexAuthModel(ctx: ExtensionContext): Model<any> | undefined {
-	const registry = ctx.modelRegistry as {
-		find?: (provider: string, modelId: string) => Model<any> | undefined;
-		getAvailable?: () => Model<any>[];
-		getAll?: () => Model<any>[];
-	};
+	const registry = ctx.modelRegistry as ModelRegistryLike;
 	const currentId = ctx.model?.id;
 	const direct = currentId ? registry.find?.(OPENAI_CODEX_PROVIDER, currentId) : undefined;
 	if (isUsableOpenAICodexModel(direct)) return direct;

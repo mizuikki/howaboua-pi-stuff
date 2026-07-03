@@ -2,9 +2,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import type { Model } from "@earendil-works/pi-ai";
 import { normalizeCodexConversionConfig } from "../src/adapter/activation/config.ts";
-import { resolveCompactionTargetModel, resolveWebSearchModelSelection } from "../src/adapter/openai-model-selection.ts";
+import { resolveCompactionTargetModel, resolveWebSearchModelSelection, type ModelRegistryLike } from "../src/adapter/openai-model-selection.ts";
 
-function context(model: Model<any> | Record<string, unknown>, registry: { find?: (provider: string, modelId: string) => Model<any> | undefined } = {}) {
+function context(model: Model<any> | Record<string, unknown>, registry: ModelRegistryLike = {}) {
 	return {
 		model,
 		modelRegistry: registry,
@@ -64,7 +64,10 @@ test("compaction model selection follows current or registry metadata", () => {
 			return provider === "cch-responses" && modelId === "gpt-5.4" ? selectedModel : undefined;
 		},
 	});
+	const missingCtx = context(currentModel);
+	const fallbackModel = { ...currentModel, id: "gpt-5.5" } as Model<any>;
 
 	assert.equal(resolveCompactionTargetModel(ctx, currentModel, "current"), currentModel);
 	assert.equal(resolveCompactionTargetModel(ctx, currentModel, "gpt-5.4"), selectedModel);
+	assert.deepEqual(resolveCompactionTargetModel(missingCtx, currentModel, "gpt-5.5"), fallbackModel);
 });
