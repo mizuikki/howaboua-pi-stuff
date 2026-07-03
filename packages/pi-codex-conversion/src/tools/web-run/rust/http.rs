@@ -34,7 +34,11 @@ pub fn responses_url_from_base(base: &str) -> String {
 }
 
 pub fn headers(auth: &CodexAuth) -> anyhow::Result<HeaderMap> {
-    let mut headers = configured_provider_headers()?;
+    let mut headers = if uses_configured_provider_auth() {
+        configured_provider_headers()?
+    } else {
+        HeaderMap::new()
+    };
     headers.insert(
         "Authorization",
         HeaderValue::from_str(&auth.authorization_header()?)?,
@@ -113,6 +117,68 @@ fn codex_user_agent(originator: &str) -> String {
         os_info.version(),
         os_info.architecture().unwrap_or("unknown")
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{Mutex, OnceLock};
+
+    fn env_lock() -> &'static Mutex<()> {
+        static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+        LOCK.get_or_init(|| Mutex::new(()))
+    }
+
+    #[test]
+    fn non_provider_auth_ignores_provider_headers_env() {
+        let _guard = env_lock().lock().expect("lock env");
+        unsafe {
+            env::set_var("PI_CODEX_AUTH_MODE", "codex");
+            env::set_var("PI_CODEX_PROVIDER_HEADERS", r#"{"X-Custom":"yes"}"#);
+        }
+
+        let headers = headers(&CodexAuth::Bearer {
+            token: "token".to_string(),
+            account_id: Some("account".to_string()),
+        })
+        .expect("headers should build");
+
+        assert_eq!(headers.get("X-Custom"), None);
+
+        unsafe {
+            env::remove_var("PI_CODEX_AUTH_MODE");
+            env::remove_var("PI_CODEX_PROVIDER_HEADERS");
+        }
+    }
+
+    #[test]
+    fn provider_auth_includes_provider_headers_env() {
+        let _guard = env_lock().lock().expect("lock env");
+        unsafe {
+            env::set_var("PI_CODEX_AUTH_MODE", "provider");
+            env::set_var(
+                "PI_CODEX_PROVIDER_HEADERS",
+                r#"{"X-Custom":"yes","Authorization":"Bearer ignored"}"#,
+            );
+        }
+
+        let headers = headers(&CodexAuth::Bearer {
+            token: "token".to_string(),
+            account_id: None,
+        })
+        .expect("headers should build");
+
+        assert_eq!(
+            headers.get("X-Custom"),
+            Some(&HeaderValue::from_static("yes"))
+        );
+        assert_eq!(headers.get("ChatGPT-Account-ID"), None);
+
+        unsafe {
+            env::remove_var("PI_CODEX_AUTH_MODE");
+            env::remove_var("PI_CODEX_PROVIDER_HEADERS");
+        }
+    }
 }
 
 pub fn build_codex_http_client() -> anyhow::Result<reqwest::Client> {
