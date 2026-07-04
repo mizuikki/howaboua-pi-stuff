@@ -5,6 +5,7 @@ export interface ExecResultSessionState extends ExecOutputSessionState {
 	id: number;
 	command: string;
 	exitCode: number | null | undefined;
+	exposeSessionId?: boolean | undefined;
 	startedAt: number;
 	updatedAt: number;
 	terminating: boolean;
@@ -13,15 +14,15 @@ export interface ExecResultSessionState extends ExecOutputSessionState {
 function fromSnapshot(session: ExecResultSessionState, waitMs: number, snapshot: { output: string; original_token_count?: number | undefined }): UnifiedExecResult {
 	const result: UnifiedExecResult = { chunk_id: generateChunkId(), wall_time_seconds: waitMs / 1000, output: snapshot.output };
 	if (snapshot.original_token_count !== undefined) result.original_token_count = snapshot.original_token_count;
-	if (session.exitCode === undefined || session.exitCode === null) result.session_id = session.id;
-	else result.exit_code = session.exitCode;
+	if ((session.exitCode === undefined || session.exitCode === null) && session.exposeSessionId !== false) result.session_id = session.id;
+	else if (session.exitCode !== undefined && session.exitCode !== null) result.exit_code = session.exitCode;
 	return result;
 }
 
 export function makeExecResult<TSession extends ExecResultSessionState>(session: TSession, waitMs: number, maxOutputTokens: number | undefined, exposeSession: (session: TSession) => void, deleteSessionIfDrained: (sessionId: number) => void): UnifiedExecResult {
 	const consumed = consumeOutput(session, maxOutputTokens);
 	const result = fromSnapshot(session, waitMs, consumed);
-	if (session.exitCode === undefined || session.exitCode === null) {
+	if ((session.exitCode === undefined || session.exitCode === null) && session.exposeSessionId !== false) {
 		exposeSession(session);
 	} else if (session.emittedBuffer === session.buffer) {
 		deleteSessionIfDrained(session.id);

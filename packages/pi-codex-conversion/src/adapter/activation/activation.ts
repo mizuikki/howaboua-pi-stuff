@@ -7,7 +7,6 @@ import {
 	CORE_ADAPTER_TOOL_NAMES,
 	DEFAULT_TOOL_NAMES,
 	IMAGE_GENERATION_TOOL_NAME,
-	PATH_MODE_TOOL_NAMES,
 	STATUS_KEY,
 	SHELL_ADAPTER_TOOL_NAMES,
 	VIEW_IMAGE_TOOL_NAME,
@@ -154,9 +153,10 @@ function getStatusConfig(ctx: ExtensionContext, config: CodexConversionConfig): 
 }
 
 function getAdapterToolNames(ctx: ExtensionContext, config: CodexConversionConfig): string[] {
-	if (config.mode === "path") return [...PATH_MODE_TOOL_NAMES];
+	const shellToolNames = config.tools.backgroundShellSessions ? [...SHELL_ADAPTER_TOOL_NAMES] : [SHELL_ADAPTER_TOOL_NAMES[0]!];
+	if (config.mode === "path") return shellToolNames;
 	const useCodexBackedNativeTools = shouldUseCodexBackedNativeTools(ctx, config);
-	const toolNames = [...CORE_ADAPTER_TOOL_NAMES];
+	const toolNames = [...shellToolNames, APPLY_PATCH_TOOL_NAME];
 	if (config.tools.webRun && (supportsNativeWebSearch(ctx.model) || useCodexBackedNativeTools)) toolNames.push(WEB_SEARCH_TOOL_NAME);
 	if (config.tools.imageGeneration && (supportsNativeImageGeneration(ctx.model) || useCodexBackedNativeTools)) toolNames.push(IMAGE_GENERATION_TOOL_NAME);
 	if (supportsViewImageInputs(ctx.model) || config.tools.viewImageFallback) toolNames.push(VIEW_IMAGE_TOOL_NAME);

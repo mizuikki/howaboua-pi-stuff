@@ -42,6 +42,10 @@ export function registerCodexCommand(
 			state.config = readCodexConversionConfig();
 			const arg = args.trim().toLowerCase();
 			if (arg === "ps") {
+				if (!state.config.tools.backgroundShellSessions) {
+					ctx.ui.notify("Background shell sessions are off.", "info");
+					return;
+				}
 				if (!state.config.ui.backgroundShellWidget) {
 					ctx.ui.notify("Background shells widget is off.", "info");
 					return;
@@ -147,5 +151,5 @@ function formatCodexSettings(config: CodexConversionConfig): string {
 		config.tools.webRunOnly ? "web_run" : undefined,
 		config.tools.imageGenerationOnly ? "imagegen" : undefined,
 	].filter(Boolean).join(", ") || "off";
-	return `Codex settings: all models ${formatAllProvidersMode(config.scope.allProviders)}, additional providers ${config.scope.additionalProviders.length > 0 ? config.scope.additionalProviders.join(", ") : "none"}, statusline ${config.ui.statusLine ? "on" : "off"}, tool renaming ${config.ui.toolRenaming ? "on" : "off"}, compact tools ${config.ui.compactTools ? "on" : "off"}, background shells widget ${config.ui.backgroundShellWidget ? "on" : "off"}, image descriptions ${config.tools.viewImageFallback ? "on" : "off"}, extra tools only ${extraTools}, fast ${config.openai.fast ? "on" : "off"}, cached websocket upgrade ${config.openai.forceCachedWebSockets === false ? "off" : "on"}, web search auth ${config.openai.webSearchAuth}, responses compaction ${(config.compaction.responsesCompaction ?? false) ? "on" : "off"} (${config.openai.compactionModel}/${config.openai.compactionReasoning}), verbosity ${config.openai.verbosity}`;
+	return `Codex settings: all models ${formatAllProvidersMode(config.scope.allProviders)}, additional providers ${config.scope.additionalProviders.length > 0 ? config.scope.additionalProviders.join(", ") : "none"}, statusline ${config.ui.statusLine ? "on" : "off"}, tool renaming ${config.ui.toolRenaming ? "on" : "off"}, compact tools ${config.ui.compactTools ? "on" : "off"}, background shell sessions ${config.tools.backgroundShellSessions ? "on" : "off"}, background shells widget ${config.ui.backgroundShellWidget ? "on" : "off"}, image descriptions ${config.tools.viewImageFallback ? "on" : "off"}, extra tools only ${extraTools}, fast ${config.openai.fast ? "on" : "off"}, cached websocket upgrade ${config.openai.forceCachedWebSockets === false ? "off" : "on"}, web search auth ${config.openai.webSearchAuth}, responses compaction ${(config.compaction.responsesCompaction ?? false) ? "on" : "off"} (${config.openai.compactionModel}/${config.openai.compactionReasoning}), verbosity ${config.openai.verbosity}`;
 }

@@ -27,6 +27,7 @@ export interface CodexConversionConfig {
 		webRun: boolean;
 		imageGeneration: boolean;
 		viewImageFallback: boolean;
+		backgroundShellSessions: boolean;
 		applyPatchOnly: boolean;
 		viewImageOnly: boolean;
 		webRunOnly: boolean;
@@ -58,7 +59,7 @@ export const CODEX_CONVERSION_CONFIG_BASENAME = "pi-codex-conversion.json";
 export const DEFAULT_CODEX_CONVERSION_CONFIG: CodexConversionConfig = {
 	mode: "normal",
 	scope: { allProviders: "off", additionalProviders: [] },
-	tools: { webRun: true, imageGeneration: true, viewImageFallback: false, applyPatchOnly: false, viewImageOnly: false, webRunOnly: false, imageGenerationOnly: false },
+	tools: { webRun: true, imageGeneration: true, viewImageFallback: false, backgroundShellSessions: true, applyPatchOnly: false, viewImageOnly: false, webRunOnly: false, imageGenerationOnly: false },
 	ui: {
 		statusLine: true,
 		toolRenaming: true,
@@ -156,6 +157,7 @@ export function normalizeCodexConversionConfig(value: unknown): CodexConversionC
 			webRun: bool(tools["webRun"], DEFAULT_CODEX_CONVERSION_CONFIG.tools["webRun"]),
 			imageGeneration: bool(tools["imageGeneration"], DEFAULT_CODEX_CONVERSION_CONFIG.tools["imageGeneration"]),
 			viewImageFallback: bool(tools["viewImageFallback"], DEFAULT_CODEX_CONVERSION_CONFIG.tools["viewImageFallback"]),
+			backgroundShellSessions: bool(tools["backgroundShellSessions"], DEFAULT_CODEX_CONVERSION_CONFIG.tools["backgroundShellSessions"]),
 			applyPatchOnly: bool(tools["applyPatchOnly"], DEFAULT_CODEX_CONVERSION_CONFIG.tools["applyPatchOnly"]),
 			viewImageOnly: bool(tools["viewImageOnly"], DEFAULT_CODEX_CONVERSION_CONFIG.tools["viewImageOnly"]),
 			webRunOnly: bool(tools["webRunOnly"], DEFAULT_CODEX_CONVERSION_CONFIG.tools["webRunOnly"]),

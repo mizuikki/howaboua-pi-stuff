@@ -224,6 +224,7 @@ function buildItems(tab: SettingsTab, draft: CodexConversionConfig, theme: Theme
 			{ id: "shellCommands", label: "Shell commands", currentValue: "required", values: ["required"] },
 			{ id: "applyPatch", label: "Apply patch", currentValue: "required", values: ["required"] },
 			{ id: "viewImage", label: "View image", currentValue: "required", values: ["required"] },
+			{ id: "backgroundShellSessions", label: "Background shell sessions", currentValue: draft.tools.backgroundShellSessions ? "on" : "off", values: ["off", "on"] },
 			{ id: "viewImageFallback", label: "Image descriptions", currentValue: draft.tools.viewImageFallback ? "on" : "off", values: ["off", "on"] },
 			{ id: "webRun", label: "Web search", currentValue: draft.tools.webRun ? "on" : "off", values: ["off", "on"] },
 			{ id: "imageGeneration", label: "Image generation", currentValue: draft.tools.imageGeneration ? "on" : "off", values: ["off", "on"] },
@@ -275,6 +276,7 @@ function applySettingChange(id: string, value: string, draft: CodexConversionCon
 	if (id === "responsesCompaction") return { ...draft, compaction: { ...draft.compaction, responsesCompaction: value === "on" } };
 	if (id === "webRun") return { ...draft, tools: { ...draft.tools, webRun: value === "on" } };
 	if (id === "imageGeneration") return { ...draft, tools: { ...draft.tools, imageGeneration: value === "on" } };
+	if (id === "backgroundShellSessions") return { ...draft, tools: { ...draft.tools, backgroundShellSessions: value === "on" } };
 	if (id === "viewImageFallback") return { ...draft, tools: { ...draft.tools, viewImageFallback: value === "on" } };
 	if (id === "applyPatchOnly") return { ...draft, tools: { ...draft.tools, applyPatchOnly: value === "on" } };
 	if (id === "viewImageOnly") return { ...draft, tools: { ...draft.tools, viewImageOnly: value === "on" } };

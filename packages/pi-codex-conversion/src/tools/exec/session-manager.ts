@@ -56,6 +56,7 @@ interface BaseExecSession {
 	updatedAt: number;
 	finalized: boolean;
 	exposed: boolean;
+	exposeSessionId: boolean;
 	terminating: boolean;
 	listeners: Set<() => void>;
 	interactive: boolean;
@@ -77,6 +78,7 @@ export type ExecSessionUpdateCallback = (result: UnifiedExecResult) => void;
 
 export interface ExecSessionManager {
 	setBaseEnv(env: NodeJS.ProcessEnv): void;
+	setBackgroundSessions(enabled: boolean): void;
 	exec(input: ExecCommandInput, cwd: string, signal?: AbortSignal, onUpdate?: ExecSessionUpdateCallback): Promise<UnifiedExecResult>;
 	write(input: WriteStdinInput, signal?: AbortSignal, onUpdate?: ExecSessionUpdateCallback): Promise<UnifiedExecResult>;
 	hasSession(sessionId: number): boolean;
@@ -96,6 +98,7 @@ export interface ExecSessionManagerOptions {
 	minEmptyWriteYieldTimeMs?: number | undefined;
 	maxEmptyWriteYieldTimeMs?: number | undefined;
 	maxSessionBufferChars?: number | undefined;
+	backgroundSessions?: boolean | undefined;
 }
 
 const MAX_COMMAND_HISTORY = 256;
@@ -119,6 +122,7 @@ export function createExecSessionManager(options: ExecSessionManagerOptions = {}
 		options.maxEmptyWriteYieldTimeMs ?? DEFAULT_MAX_EMPTY_WRITE_YIELD_TIME_MS,
 	);
 	const maxSessionBufferChars = Math.max(1024, options.maxSessionBufferChars ?? DEFAULT_MAX_SESSION_BUFFER_CHARS);
+	let backgroundSessions = options.backgroundSessions ?? true;
 
 	function rememberCommand(sessionId: number, command: string): void {
 		commandHistory.set(sessionId, command);
@@ -193,6 +197,31 @@ export function createExecSessionManager(options: ExecSessionManagerOptions = {}
 		baseEnv = { ...env };
 	}
 
+	function terminateAndForgetSessions(): void {
+		const processIds = Array.from(sessions.values()).filter((session) => session.exitCode === undefined || session.exitCode === null).map((session) => session.processId);
+		for (const session of sessions.values()) {
+			session.terminating = true;
+			session.exposeSessionId = false;
+			if (session.exitCode === undefined || session.exitCode === null) {
+				setClosedExitCode(session, null, "SIGTERM");
+			}
+			finalizeSession(session, "terminate");
+		}
+		for (const processId of processIds) {
+			void bridge.request({ op: "terminate", process_id: processId }).catch(() => {});
+			setTimeout(() => void bridge.request({ op: "terminate", process_id: processId }).catch(() => {}), TERMINATE_ESCALATE_MS).unref?.();
+		}
+		sessions.clear();
+		commandHistory.clear();
+		notifyChanged("terminate");
+	}
+
+	function setBackgroundSessions(enabled: boolean): void {
+		if (backgroundSessions === enabled) return;
+		backgroundSessions = enabled;
+		if (!enabled) terminateAndForgetSessions();
+	}
+
 	async function pollSession(session: RustExecSession, waitMs = 0, maxBytes?: number): Promise<void> {
 		const response = await bridge.request<BridgeReadResponse>({
 			op: "read",
@@ -231,6 +260,7 @@ export function createExecSessionManager(options: ExecSessionManagerOptions = {}
 			updatedAt: Date.now(),
 			finalized: false,
 			exposed: false,
+			exposeSessionId: backgroundSessions,
 			terminating: false,
 			terminalCommitted: "",
 			terminalLine: [],
@@ -262,6 +292,30 @@ export function createExecSessionManager(options: ExecSessionManagerOptions = {}
 		return session;
 	}
 
+	async function terminateUnexposedSession(session: RustExecSession, signal: AbortSignal | undefined, onUpdate: ExecSessionUpdateCallback | undefined, maxOutputTokens: number | undefined): Promise<number> {
+		session.terminating = true;
+		session.exposeSessionId = false;
+		notify(session, "terminate");
+		await bridge.request({ op: "terminate", process_id: session.processId }).catch(() => {});
+		const waitedMs = await waitForExitOrTimeout(
+			session,
+			TERMINATE_ESCALATE_MS,
+			signal,
+			onUpdate ? (elapsedMs) => onUpdate(makeSnapshotResult(session, elapsedMs, maxOutputTokens)) : undefined,
+		);
+		await pollSession(session, 0).catch(() => {});
+		if (session.exitCode === undefined || session.exitCode === null) {
+			await bridge.request({ op: "terminate", process_id: session.processId }).catch(() => {});
+			await waitForExitOrTimeout(session, 500, signal);
+			await pollSession(session, 0).catch(() => {});
+		}
+		if (session.exitCode === undefined || session.exitCode === null) {
+			setClosedExitCode(session, null, "SIGTERM");
+			finalizeSession(session, "terminate");
+		}
+		return waitedMs;
+	}
+
 	async function pollSessionLoop(session: RustExecSession): Promise<void> {
 		while (sessions.has(session.id) && (session.exitCode === undefined || session.exitCode === null)) {
 			try {
@@ -277,6 +331,7 @@ export function createExecSessionManager(options: ExecSessionManagerOptions = {}
 
 	return {
 		setBaseEnv,
+		setBackgroundSessions,
 		exec: async (input, cwd, signal, onUpdate) => {
 			const shell = resolveShell(input.shell);
 			const workdir = resolveWorkdir(cwd, input.workdir);
@@ -291,13 +346,16 @@ export function createExecSessionManager(options: ExecSessionManagerOptions = {}
 
 			try {
 				onUpdate?.(makeSnapshotResult(session, 0, input.max_output_tokens, true));
-				const waitedMs = await waitForExitOrTimeout(
+				let waitedMs = await waitForExitOrTimeout(
 					session,
 					clampExecYieldTime(input.yield_time_ms, defaultExecYieldTimeMs, session.interactive, minNonInteractiveExecYieldTimeMs, input.max_yield_time_ms),
 					signal,
 					onUpdate ? (elapsedMs) => onUpdate(makeSnapshotResult(session, elapsedMs, input.max_output_tokens)) : undefined,
 				);
 				await pollSession(session, 0);
+				if (!backgroundSessions && (session.exitCode === undefined || session.exitCode === null)) {
+					waitedMs += await terminateUnexposedSession(session, signal, onUpdate, input.max_output_tokens);
+				}
 				return makeExecResult(session, waitedMs, input.max_output_tokens, exposeSession, (sessionId) => sessions.delete(sessionId));
 			} finally {
 				abortCleanup();
@@ -306,6 +364,9 @@ export function createExecSessionManager(options: ExecSessionManagerOptions = {}
 		write: async (input, signal, onUpdate) => {
 			if (signal?.aborted) {
 				throw new Error("write_stdin aborted");
+			}
+			if (!backgroundSessions) {
+				throw new Error("background shell sessions are disabled");
 			}
 			const session = sessions.get(input.session_id);
 			if (!session) {
