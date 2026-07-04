@@ -11,35 +11,49 @@ export interface StructuredPromptSkill {
 	disableModelInvocation?: boolean | undefined;
 }
 
+const EXEC_COMMAND_GUIDELINE = "Use exec_command for shell commands, file inspection, builds, and tests; prefer rg / rg --files for discovery and focused commands over truncation.";
+const NORMAL_TTY_GUIDELINE = "Use tty=true for dev servers, watchers, REPLs, and prompts.";
+const APPLY_PATCH_GUIDELINE = "Use apply_patch for text-file changes, including creates/deletes/moves; group related multi-file edits into one patch.";
+const SHELL_APPLY_PATCH_GUIDELINE = "Prefer the apply_patch tool; use shell apply_patch only when chaining edits with other shell steps.";
+const WRITE_STDIN_GUIDELINE = "Use write_stdin only for running exec_command sessions; poll sparingly.";
+const PARALLEL_TOOL_GUIDELINE = "Run independent tool calls in parallel when practical.";
+const PATH_EXEC_COMMAND_GUIDELINE = "Use exec_command for shell/file/build/test; prefer rg/rg --files.";
+const PATH_TTY_GUIDELINE = "Use tty=true for interactive commands.";
+const PATH_APPLY_PATCH_GUIDELINE = "Use apply_patch for file edits; group related edits.";
+const PATH_TOOL_PROBE_GUIDELINE = "Do not probe listed PATH tools.";
+const PATH_STDIN_GUIDELINE = "Use stdin/heredoc for quoted or multiline PATH args.";
+const PATH_CHAIN_GUIDELINE = "Chain dependent shell commands with &&.";
+const PATH_PARALLEL_EXEC_GUIDELINE = "Run independent exec_command calls in parallel when practical.";
+
 const NORMAL_CODEX_GUIDELINES = [
-	"Use exec_command for shell commands, file inspection, builds, and tests; prefer rg / rg --files for discovery and focused commands over truncation.",
-	"Use tty=true for dev servers, watchers, REPLs, and prompts.",
-	"Use apply_patch for text-file changes, including creates/deletes/moves; group related multi-file edits into one patch.",
-	"Prefer the apply_patch tool; use shell apply_patch only when chaining edits with other shell steps.",
-	"Use write_stdin only for running exec_command sessions; poll sparingly.",
-	"Run independent tool calls in parallel when practical.",
+	EXEC_COMMAND_GUIDELINE,
+	NORMAL_TTY_GUIDELINE,
+	APPLY_PATCH_GUIDELINE,
+	SHELL_APPLY_PATCH_GUIDELINE,
+	WRITE_STDIN_GUIDELINE,
+	PARALLEL_TOOL_GUIDELINE,
 ];
 
 const PATH_CODEX_GUIDELINES = [
-	"Use exec_command for shell/file/build/test; prefer rg/rg --files.",
-	"Use tty=true for interactive commands.",
-	"Use apply_patch for file edits; group related edits.",
-	"Do not probe listed PATH tools.",
-	"Use stdin/heredoc for quoted or multiline PATH args.",
-	"Chain dependent shell commands with &&.",
-	"Run independent exec_command calls in parallel when practical.",
+	PATH_EXEC_COMMAND_GUIDELINE,
+	PATH_TTY_GUIDELINE,
+	PATH_APPLY_PATCH_GUIDELINE,
+	PATH_TOOL_PROBE_GUIDELINE,
+	PATH_STDIN_GUIDELINE,
+	PATH_CHAIN_GUIDELINE,
+	PATH_PARALLEL_EXEC_GUIDELINE,
 ];
 
 const PATH_MODE_REMOVED_GUIDELINES = new Set([
-	"Use apply_patch for text-file changes, including creates/deletes/moves; group related multi-file edits into one patch.",
-	"Prefer the apply_patch tool; use shell apply_patch only when chaining edits with other shell steps.",
-	"Run independent tool calls in parallel when practical.",
+	APPLY_PATCH_GUIDELINE,
+	SHELL_APPLY_PATCH_GUIDELINE,
+	PARALLEL_TOOL_GUIDELINE,
 ]);
 
 const BACKGROUND_SESSIONS_DISABLED_REMOVED_GUIDELINES = new Set([
-	"Use tty=true for dev servers, watchers, REPLs, and prompts.",
-	"Use write_stdin only for running exec_command sessions; poll sparingly.",
-	"Use tty=true for interactive commands.",
+	NORMAL_TTY_GUIDELINE,
+	WRITE_STDIN_GUIDELINE,
+	PATH_TTY_GUIDELINE,
 ]);
 
 const BACKGROUND_SESSIONS_DISABLED_GUIDELINE = "Background shell sessions are disabled; do not use write_stdin or start long-running/interactive commands expecting a session_id. Use bounded foreground exec_command calls.";
@@ -185,12 +199,13 @@ function injectGuidelines(prompt: string, mode?: "normal" | "path", tools?: Code
 		.filter((line) => line.startsWith("- "));
 	const existing = new Set(existingLines.map((line) => line.slice(2)));
 	const additions = buildCodexGuidelines(mode, tools).filter((line) => !existing.has(line)).map((line) => `- ${line}`);
-	if (additions.length === 0) {
+	const removedGuidelinesChanged = keptBodyLines.length !== bodyLines.length;
+	if (additions.length === 0 && !removedGuidelinesChanged) {
 		return prompt;
 	}
 
 	const normalizedBody = keptBodyLines.join("\n").trimEnd();
-	const replacement = `${header}${normalizedBody}\n${additions.join("\n")}${suffix}`;
+	const replacement = `${header}${normalizedBody}${additions.length > 0 ? `\n${additions.join("\n")}` : ""}${suffix}`;
 	return `${prompt.slice(0, match.index)}${replacement}${prompt.slice(match.index + match[0]!.length)}`;
 }
 

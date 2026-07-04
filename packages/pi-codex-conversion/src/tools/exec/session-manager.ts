@@ -202,6 +202,10 @@ export function createExecSessionManager(options: ExecSessionManagerOptions = {}
 		for (const session of sessions.values()) {
 			session.terminating = true;
 			session.exposeSessionId = false;
+			if (session.exitCode === undefined || session.exitCode === null) {
+				setClosedExitCode(session, null, "SIGTERM");
+			}
+			finalizeSession(session, "terminate");
 		}
 		for (const processId of processIds) {
 			void bridge.request({ op: "terminate", process_id: processId }).catch(() => {});

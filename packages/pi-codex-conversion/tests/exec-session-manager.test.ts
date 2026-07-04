@@ -131,6 +131,8 @@ test("exec session manager can disable background sessions", async () => {
 
 test("disabling background sessions clears running sessions", async () => {
 	const sessions = createFastTestExecSessionManager();
+	const exitedSessions: number[] = [];
+	sessions.onSessionExit((sessionId) => exitedSessions.push(sessionId));
 	try {
 		const started = await sessions.exec(
 			{
@@ -147,7 +149,32 @@ test("disabling background sessions clears running sessions", async () => {
 		sessions.setBackgroundSessions(false);
 		assert.equal(sessions.listSessions().length, 0);
 		assert.equal(sessions.hasSession(started.session_id!), false);
+		assert.deepEqual(exitedSessions, [started.session_id!]);
 		await assert.rejects(() => sessions.write({ session_id: started.session_id!, yield_time_ms: 50 }), /background shell sessions are disabled/i);
+	} finally {
+		sessions.shutdown();
+	}
+});
+
+test("disabling background sessions settles in-flight writes", async () => {
+	const sessions = createFastTestExecSessionManager();
+	try {
+		const started = await sessions.exec(
+			{
+				cmd: "sleep 5",
+				shell: "/bin/bash",
+				login: false,
+				yield_time_ms: 50,
+			},
+			process.cwd(),
+		);
+
+		assert.equal(typeof started.session_id, "number");
+		const pendingWrite = sessions.write({ session_id: started.session_id!, yield_time_ms: 500 });
+		sessions.setBackgroundSessions(false);
+		const result = await pendingWrite;
+		assert.equal(result.session_id, undefined);
+		assert.equal(typeof result.exit_code, "number");
 	} finally {
 		sessions.shutdown();
 	}

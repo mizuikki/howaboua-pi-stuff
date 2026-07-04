@@ -28,7 +28,7 @@ pi install npm:@howaboua/pi-codex-conversion
 Normal mode keeps the familiar Pi function-tool surface:
 
 - `exec_command` — shell execution with Codex-style `cmd` parameters and resumable sessions
-- `write_stdin` — continue or poll a running exec session
+- `write_stdin` — continue or poll a running exec session; omitted when Background shell sessions is off
 - `apply_patch` — patch edits through the bundled Rust patch tool
 - `view_image` — inspect local images through the bundled Rust image tool when the model supports image input
 - `web_run` — web search through the bundled Rust web tool when enabled and supported
@@ -39,7 +39,7 @@ For configured `openai-responses` providers, `web_run` uses that provider's `/re
 PATH mode narrows the structured tool surface to shell control only:
 
 - `exec_command` — shell execution with Codex-style `cmd` parameters and resumable sessions
-- `write_stdin` — continue or poll a running exec session
+- `write_stdin` — continue or poll a running exec session; omitted when Background shell sessions is off
 
 In PATH mode, Codex-style extras live on the extension-injected internal PATH:
 
