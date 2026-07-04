@@ -22,19 +22,31 @@ const ADAPTER_TOOL_NAMES = [...CORE_ADAPTER_TOOL_NAMES, WEB_SEARCH_TOOL_NAME, IM
 
 export function syncAdapter(pi: ExtensionAPI, ctx: ExtensionContext, state: AdapterState): void {
 	if (shouldUseExtraToolsOnly(ctx, state.config)) {
-		enableExtraToolsOnly(pi, ctx, state);
+		enableOverlayToolsOnly(pi, ctx, state, getExtraToolsOnlyToolNames(ctx, state.config), /*extraToolsOnly*/ true);
 		return;
 	}
-	if (shouldUseCodexAdapter(ctx, state.config)) {
+	if (shouldUsePiToolSurface(ctx, state.config)) {
+		enableOverlayToolsOnly(pi, ctx, state, getPiSurfaceToolNames(ctx, state.config));
+		return;
+	}
+	if (shouldUseCodexToolSurface(ctx, state.config)) {
 		enableAdapter(pi, ctx, state);
 	} else {
 		disableAdapter(pi, ctx, state);
 	}
 }
 
-export function shouldUseCodexAdapter(ctx: ExtensionContext, config: CodexConversionConfig): boolean {
+export function shouldUseCodexRuntimeFeatures(ctx: ExtensionContext, config: CodexConversionConfig): boolean {
 	if (shouldUseExtraToolsOnly(ctx, config)) return false;
-	return usesFullAdapterOnAllProviders(config) || isConfiguredAdapterProvider(ctx, config) || isCodexLikeContext(ctx);
+	return hasScopedCodexContext(ctx, config);
+}
+
+export function shouldUseCodexToolSurface(ctx: ExtensionContext, config: CodexConversionConfig): boolean {
+	return config.toolSurface === "codex" && shouldUseCodexRuntimeFeatures(ctx, config);
+}
+
+export function shouldUseCodexAdapter(ctx: ExtensionContext, config: CodexConversionConfig): boolean {
+	return shouldUseCodexRuntimeFeatures(ctx, config);
 }
 
 export function shouldUseNativeResponsesCompaction(ctx: ExtensionContext, config: CodexConversionConfig): boolean {
@@ -48,11 +60,11 @@ export function isConfiguredAdapterProvider(ctx: ExtensionContext, config: Codex
 }
 
 export function shouldUseProxyNativeTools(ctx: ExtensionContext, config: CodexConversionConfig): boolean {
-	return config.mode === "normal" && isConfiguredAdapterProvider(ctx, config);
+	return isConfiguredAdapterProvider(ctx, config);
 }
 
-function shouldUseCodexBackedNativeTools(ctx: ExtensionContext, config: CodexConversionConfig): boolean {
-	return config.mode === "normal" && (usesAnyAdapterModeOnAllProviders(config) || isConfiguredAdapterProvider(ctx, config));
+function shouldAllowConfiguredNativeTools(ctx: ExtensionContext, config: CodexConversionConfig): boolean {
+	return usesAnyAdapterModeOnAllProviders(config) || isConfiguredAdapterProvider(ctx, config);
 }
 
 export function isEffectiveOpenAICodexContext(ctx: ExtensionContext, config: CodexConversionConfig): boolean {
@@ -60,10 +72,13 @@ export function isEffectiveOpenAICodexContext(ctx: ExtensionContext, config: Cod
 }
 
 export function shouldUseExtraToolsOnly(ctx: ExtensionContext, config: CodexConversionConfig): boolean {
-	if (config.mode !== "normal") return false;
 	if (!hasExtraToolsOnlyConfig(config)) return false;
 	if (usesExtraToolsOnlyOnAllProviders(config)) return true;
 	return config.scope.allProviders === "off" && (isConfiguredAdapterProvider(ctx, config) || isCodexLikeContext(ctx));
+}
+
+function shouldUsePiToolSurface(ctx: ExtensionContext, config: CodexConversionConfig): boolean {
+	return config.toolSurface === "pi" && hasScopedCodexContext(ctx, config);
 }
 
 function hasExtraToolsOnlyConfig(config: CodexConversionConfig): boolean {
@@ -82,8 +97,11 @@ function usesAnyAdapterModeOnAllProviders(config: CodexConversionConfig): boolea
 	return config.scope.allProviders !== "off";
 }
 
-function enableExtraToolsOnly(pi: ExtensionAPI, ctx: ExtensionContext, state: AdapterState): void {
-	const adapterOwnedTools = getExtraToolsOnlyToolNames(ctx, state.config);
+function hasScopedCodexContext(ctx: ExtensionContext, config: CodexConversionConfig): boolean {
+	return usesFullAdapterOnAllProviders(config) || isConfiguredAdapterProvider(ctx, config) || isCodexLikeContext(ctx);
+}
+
+function enableOverlayToolsOnly(pi: ExtensionAPI, ctx: ExtensionContext, state: AdapterState, adapterOwnedTools: string[], extraToolsOnly = false): void {
 	if (!state.enabled || !sameToolSet(state.adapterOwnedToolNames ?? [], adapterOwnedTools)) {
 		const restoredBase = state.enabled
 			? restoreTools(state.previousToolNames && state.previousToolNames.length > 0 ? state.previousToolNames : DEFAULT_TOOL_NAMES, pi.getActiveTools(), state.adapterOwnedToolNames ?? ADAPTER_TOOL_NAMES)
@@ -93,7 +111,8 @@ function enableExtraToolsOnly(pi: ExtensionAPI, ctx: ExtensionContext, state: Ad
 	}
 	state.adapterOwnedToolNames = adapterOwnedTools;
 	pi.setActiveTools(mergeToolNames(state.previousToolNames ?? DEFAULT_TOOL_NAMES, adapterOwnedTools));
-	setExtraToolsOnlyStatus(ctx, state.config, adapterOwnedTools);
+	if (extraToolsOnly) setExtraToolsOnlyStatus(ctx, state.config, adapterOwnedTools);
+	else setStatus(ctx, true, state.config);
 }
 
 function enableAdapter(pi: ExtensionAPI, ctx: ExtensionContext, state: AdapterState): void {
@@ -139,14 +158,16 @@ function setStatus(ctx: ExtensionContext, enabled: boolean, config: CodexConvers
 function getStatusConfig(ctx: ExtensionContext, config: CodexConversionConfig): Parameters<typeof buildStatusText>[0] {
 	const showOpenAICodexFlags = isEffectiveOpenAICodexContext(ctx, config);
 	const showResponsesVerbosity = isResponsesContext(ctx);
-	const useCodexBackedNativeTools = shouldUseCodexBackedNativeTools(ctx, config);
+	const useCodexBackedNativeTools = shouldAllowConfiguredNativeTools(ctx, config);
+	const usesNativeExtraTools = config.toolSurface === "pi" || config.mode === "normal";
 	return {
+		toolSurface: config.toolSurface,
 		mode: config.mode,
 		useOnAllModels: usesFullAdapterOnAllProviders(config),
 		additionalProvider: isConfiguredAdapterProvider(ctx, config),
 		fast: showOpenAICodexFlags && config.openai.fast,
-		webSearch: config.mode === "normal" && config.tools.webRun && (supportsNativeWebSearch(ctx.model) || useCodexBackedNativeTools),
-		imageGeneration: config.mode === "normal" && config.tools.imageGeneration && (supportsNativeImageGeneration(ctx.model) || useCodexBackedNativeTools),
+		webSearch: usesNativeExtraTools && config.tools.webRun && (supportsNativeWebSearch(ctx.model) || useCodexBackedNativeTools),
+		imageGeneration: usesNativeExtraTools && config.tools.imageGeneration && (supportsNativeImageGeneration(ctx.model) || useCodexBackedNativeTools),
 		compaction: { enabled: shouldUseNativeResponsesCompaction(ctx, config), model: config.openai.compactionModel, reasoning: config.openai.compactionReasoning },
 		...(showResponsesVerbosity ? { verbosity: config.openai.verbosity } : {}),
 	};
@@ -155,7 +176,7 @@ function getStatusConfig(ctx: ExtensionContext, config: CodexConversionConfig): 
 function getAdapterToolNames(ctx: ExtensionContext, config: CodexConversionConfig): string[] {
 	const shellToolNames = config.tools.backgroundShellSessions ? [...SHELL_ADAPTER_TOOL_NAMES] : [SHELL_ADAPTER_TOOL_NAMES[0]!];
 	if (config.mode === "path") return shellToolNames;
-	const useCodexBackedNativeTools = shouldUseCodexBackedNativeTools(ctx, config);
+	const useCodexBackedNativeTools = shouldAllowConfiguredNativeTools(ctx, config);
 	const toolNames = [...shellToolNames, APPLY_PATCH_TOOL_NAME];
 	if (config.tools.webRun && (supportsNativeWebSearch(ctx.model) || useCodexBackedNativeTools)) toolNames.push(WEB_SEARCH_TOOL_NAME);
 	if (config.tools.imageGeneration && (supportsNativeImageGeneration(ctx.model) || useCodexBackedNativeTools)) toolNames.push(IMAGE_GENERATION_TOOL_NAME);
@@ -163,8 +184,18 @@ function getAdapterToolNames(ctx: ExtensionContext, config: CodexConversionConfi
 	return toolNames;
 }
 
+function getPiSurfaceToolNames(ctx: ExtensionContext, config: CodexConversionConfig): string[] {
+	const useCodexBackedNativeTools = shouldAllowConfiguredNativeTools(ctx, config);
+	const toolNames: string[] = [];
+	if (config.tools.applyPatchOnly) toolNames.push(APPLY_PATCH_TOOL_NAME);
+	if ((config.tools.webRun || config.tools.webRunOnly) && (supportsNativeWebSearch(ctx.model) || useCodexBackedNativeTools)) toolNames.push(WEB_SEARCH_TOOL_NAME);
+	if ((config.tools.imageGeneration || config.tools.imageGenerationOnly) && (supportsNativeImageGeneration(ctx.model) || useCodexBackedNativeTools)) toolNames.push(IMAGE_GENERATION_TOOL_NAME);
+	if ((config.tools.viewImageOnly || config.tools.viewImageFallback) && (supportsViewImageInputs(ctx.model) || config.tools.viewImageFallback)) toolNames.push(VIEW_IMAGE_TOOL_NAME);
+	return toolNames;
+}
+
 function getExtraToolsOnlyToolNames(ctx: ExtensionContext, config: CodexConversionConfig): string[] {
-	const useCodexBackedNativeTools = shouldUseCodexBackedNativeTools(ctx, config);
+	const useCodexBackedNativeTools = shouldAllowConfiguredNativeTools(ctx, config);
 	const toolNames: string[] = [];
 	if (config.tools.applyPatchOnly) toolNames.push(APPLY_PATCH_TOOL_NAME);
 	if (config.tools.viewImageOnly && (supportsViewImageInputs(ctx.model) || config.tools.viewImageFallback)) toolNames.push(VIEW_IMAGE_TOOL_NAME);

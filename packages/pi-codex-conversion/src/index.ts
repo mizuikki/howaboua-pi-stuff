@@ -16,7 +16,7 @@ import { registerWriteStdinTool } from "./tools/exec/write-stdin-tool.ts";
 import { createBundledPathToolsEnv } from "./tools/path/binary.ts";
 import { readCodexConversionConfig } from "./adapter/activation/config.ts";
 import { resolveWebSearchModelSelection } from "./adapter/openai-model-selection.ts";
-import { syncAdapter, mergeAdapterTools, restoreTools, stripAdapterTools, shouldUseCodexAdapter } from "./adapter/activation/activation.ts";
+import { syncAdapter, mergeAdapterTools, restoreTools, stripAdapterTools, shouldUseCodexRuntimeFeatures, shouldUseCodexToolSurface } from "./adapter/activation/activation.ts";
 import { rewriteCodexProviderRequest } from "./adapter/provider-request.ts";
 import { handleCodexSessionBeforeCompact } from "./adapter/compaction/compaction.ts";
 import { isNativeCompactionDetails, NATIVE_COMPACTION_DISPLAY_MESSAGE_TYPE, NATIVE_COMPACTION_DISPLAY_TEXT } from "./adapter/compaction/types.ts";
@@ -60,12 +60,20 @@ export default function codexConversion(pi: ExtensionAPI) {
 		return { customRendering: config.ui.toolRenaming };
 	}
 
+	function usesCodexPathSurface(config = state.config): boolean {
+		return config.toolSurface === "codex" && config.mode === "path";
+	}
+
+	function usesCodexNormalSurface(config = state.config): boolean {
+		return config.toolSurface === "codex" && config.mode === "normal";
+	}
+
 	function showCollapsedPatchDiff(config = state.config): boolean {
-		return config.mode === "normal" && !config.ui.compactTools;
+		return (config.toolSurface === "pi" || usesCodexNormalSurface(config)) && !config.ui.compactTools;
 	}
 
 	function promptSnippetOptions(config = state.config): { promptSnippet: boolean } {
-		return { promptSnippet: config.mode === "path" };
+		return { promptSnippet: usesCodexPathSurface(config) };
 	}
 
 	function bundledPathToolsEnv(config = state.config): NodeJS.ProcessEnv {
@@ -87,7 +95,7 @@ export default function codexConversion(pi: ExtensionAPI) {
 
 	function registerCoreTools(config = state.config): void {
 		registerApplyPatchTool(pi, { ...promptSnippetOptions(config), showDiffWhenCollapsed: showCollapsedPatchDiff(config) });
-		registerExecCommandTool(pi, tracker, sessions, { describeImagesForTextModels: config.tools.viewImageFallback, resolveWebSearchModel: resolveConfiguredWebSearchModel, webSearchAuthMode: config.openai.webSearchAuth, allowConfiguredProvider: allowConfiguredProvider(config), ...customRenderingOptions(config), ...promptSnippetOptions(config), showOutputWhenCollapsed: config.mode === "normal", compactTools: config.ui.compactTools });
+		registerExecCommandTool(pi, tracker, sessions, { describeImagesForTextModels: config.tools.viewImageFallback, resolveWebSearchModel: resolveConfiguredWebSearchModel, webSearchAuthMode: config.openai.webSearchAuth, allowConfiguredProvider: allowConfiguredProvider(config), ...customRenderingOptions(config), ...promptSnippetOptions(config), showOutputWhenCollapsed: usesCodexNormalSurface(config), compactTools: config.ui.compactTools });
 		registerWriteStdinTool(pi, sessions, { describeImagesForTextModels: config.tools.viewImageFallback, ...promptSnippetOptions(config) });
 		registerViewImageTool(pi, { describeForTextModels: config.tools.viewImageFallback, ...customRenderingOptions(config), ...promptSnippetOptions(config) });
 	}
@@ -228,7 +236,7 @@ export default function codexConversion(pi: ExtensionAPI) {
 	});
 
 	pi.on("before_agent_start", async (event, ctx) => {
-		if (!shouldUseCodexAdapter(ctx, state.config)) {
+		if (!shouldUseCodexToolSurface(ctx, state.config)) {
 			return undefined;
 		}
 		const skills = resolvePromptSkills(event.systemPromptOptions?.skills, hasNoSkillsFlag() ? [] : state.promptSkills);
@@ -247,7 +255,7 @@ export default function codexConversion(pi: ExtensionAPI) {
 
 	pi.on("before_provider_request", async (event, ctx) => {
 		state.cwd = ctx.cwd;
-		return rewriteCodexProviderRequest(event.payload, ctx, state);
+		return shouldUseCodexRuntimeFeatures(ctx, state.config) ? rewriteCodexProviderRequest(event.payload, ctx, state) : undefined;
 	});
 
 	pi.on("session_before_compact", async (event, ctx) => {

@@ -4,6 +4,7 @@ import { getAgentDir } from "@earendil-works/pi-coding-agent";
 import { migrateCodexConversionConfigIfNeeded } from "./config-migration.ts";
 
 export type CodexVerbosity = "low" | "medium" | "high";
+export type ToolSurface = "codex" | "pi";
 export type CodexAdapterMode = "normal" | "path";
 export type AllProvidersMode = "off" | "on" | "extras";
 export type FixedOpenAIModelSelection = "gpt-5.5" | "gpt-5.4" | "gpt-5.4-mini" | "gpt-5.3-codex-spark";
@@ -21,6 +22,7 @@ export const WEB_SEARCH_MODELS: readonly WebSearchModel[] = OPENAI_MODEL_SELECTI
 export const COMPACTION_REASONING_LEVELS: readonly CompactionReasoning[] = ["current", "minimal", "low", "medium", "high", "xhigh"];
 
 export interface CodexConversionConfig {
+	toolSurface: ToolSurface;
 	mode: CodexAdapterMode;
 	scope: { allProviders: AllProvidersMode; additionalProviders: string[] };
 	tools: {
@@ -57,6 +59,7 @@ export interface CodexConversionConfig {
 
 export const CODEX_CONVERSION_CONFIG_BASENAME = "pi-codex-conversion.json";
 export const DEFAULT_CODEX_CONVERSION_CONFIG: CodexConversionConfig = {
+	toolSurface: "codex",
 	mode: "normal",
 	scope: { allProviders: "off", additionalProviders: [] },
 	tools: { webRun: true, imageGeneration: true, viewImageFallback: false, backgroundShellSessions: true, applyPatchOnly: false, viewImageOnly: false, webRunOnly: false, imageGenerationOnly: false },
@@ -88,6 +91,10 @@ export function isObject(value: unknown): value is Record<string, unknown> {
 
 export function normalizeCodexAdapterMode(value: unknown): CodexAdapterMode | undefined {
 	return value === "normal" || value === "path" ? value : undefined;
+}
+
+export function normalizeToolSurface(value: unknown): ToolSurface | undefined {
+	return value === "codex" || value === "pi" ? value : undefined;
 }
 
 export function normalizeAllProvidersMode(value: unknown): AllProvidersMode | undefined {
@@ -148,6 +155,7 @@ export function normalizeCodexConversionConfig(value: unknown): CodexConversionC
 	const compaction = isObject(value["compaction"]) ? value["compaction"] : {};
 	const openai = isObject(value["openai"]) ? value["openai"] : {};
 	return {
+		toolSurface: normalizeToolSurface(value["toolSurface"]) ?? DEFAULT_CODEX_CONVERSION_CONFIG.toolSurface,
 		mode: normalizeCodexAdapterMode(value["mode"]) ?? DEFAULT_CODEX_CONVERSION_CONFIG.mode,
 		scope: {
 			allProviders: normalizeAllProvidersMode(scope["allProviders"]) ?? DEFAULT_CODEX_CONVERSION_CONFIG.scope["allProviders"],
