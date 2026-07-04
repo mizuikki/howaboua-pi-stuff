@@ -36,14 +36,24 @@ const PATH_MODE_REMOVED_GUIDELINES = new Set([
 	"Run independent tool calls in parallel when practical.",
 ]);
 
+const BACKGROUND_SESSIONS_DISABLED_REMOVED_GUIDELINES = new Set([
+	"Use tty=true for dev servers, watchers, REPLs, and prompts.",
+	"Use write_stdin only for running exec_command sessions; poll sparingly.",
+	"Use tty=true for interactive commands.",
+]);
+
+const BACKGROUND_SESSIONS_DISABLED_GUIDELINE = "Background shell sessions are disabled; do not use write_stdin or start long-running/interactive commands expecting a session_id. Use bounded foreground exec_command calls.";
+
 export interface CodexPromptToolOptions {
 	viewImage?: boolean | undefined;
 	webRun?: boolean | undefined;
 	imageGeneration?: boolean | undefined;
+	backgroundShellSessions?: boolean | undefined;
 }
 
 function buildCodexGuidelines(mode: "normal" | "path" = "normal", tools: CodexPromptToolOptions = {}): string[] {
-	if (mode !== "path") return [...NORMAL_CODEX_GUIDELINES];
+	const backgroundShellSessions = tools.backgroundShellSessions !== false;
+	if (mode !== "path") return backgroundShellSessions ? [...NORMAL_CODEX_GUIDELINES] : [...NORMAL_CODEX_GUIDELINES.filter((line) => !BACKGROUND_SESSIONS_DISABLED_REMOVED_GUIDELINES.has(line)), BACKGROUND_SESSIONS_DISABLED_GUIDELINE];
 	const guidelines = [...PATH_CODEX_GUIDELINES];
 	const examples = [`- apply_patch <<'PATCH'`, `  *** Begin Patch`, `  ...`, `  *** End Patch`, `  PATCH`];
 	if (tools.viewImage !== false) examples.push(`- view_image '{"path":"/x.png"}'`);
@@ -58,6 +68,9 @@ function buildCodexGuidelines(mode: "normal" | "path" = "normal", tools: CodexPr
 		examples.push(`- imagegen '{"action":"edit","prompt":"...","images":["https://... or /x.png"]}'`);
 	}
 	guidelines.splice(4, 0, `PATH tool accepted forms:\n${examples.join("\n")}`);
+	if (!backgroundShellSessions) {
+		return [...guidelines.filter((line) => !BACKGROUND_SESSIONS_DISABLED_REMOVED_GUIDELINES.has(line)), BACKGROUND_SESSIONS_DISABLED_GUIDELINE];
+	}
 	return guidelines;
 }
 
@@ -162,9 +175,11 @@ function injectGuidelines(prompt: string, mode?: "normal" | "path", tools?: Code
 
 	const [, header, body, suffix] = match as RegExpMatchArray & { 1: string; 2: string; 3: string };
 	const bodyLines = body.split("\n");
-	const keptBodyLines = mode === "path"
-		? bodyLines.filter((line) => !PATH_MODE_REMOVED_GUIDELINES.has(line.trim().replace(/^-\s*/, "")))
-		: bodyLines;
+	const removedGuidelines = new Set(mode === "path" ? PATH_MODE_REMOVED_GUIDELINES : []);
+	if (tools?.backgroundShellSessions === false) {
+		for (const guideline of BACKGROUND_SESSIONS_DISABLED_REMOVED_GUIDELINES) removedGuidelines.add(guideline);
+	}
+	const keptBodyLines = bodyLines.filter((line) => !removedGuidelines.has(line.trim().replace(/^-\s*/, "")));
 	const existingLines = keptBodyLines
 		.map((line) => line.trim())
 		.filter((line) => line.startsWith("- "));

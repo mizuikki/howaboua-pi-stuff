@@ -50,7 +50,7 @@ function isToolCallOnlyAssistantMessage(message: unknown): boolean {
 export default function codexConversion(pi: ExtensionAPI) {
 	const tracker = createExecCommandTracker();
 	const state: AdapterState = { enabled: false, cwd: process.cwd(), promptSkills: [], config: readCodexConversionConfig() };
-	const sessions = createExecSessionManager({ env: createBundledPathToolsEnv({ ...process.env }) });
+	const sessions = createExecSessionManager({ env: createBundledPathToolsEnv({ ...process.env }), backgroundSessions: state.config.tools.backgroundShellSessions });
 	const backgroundBashWidget: BackgroundBashWidgetState = { folded: true };
 	const registeredNativeWebSearchTools = new Set<string>();
 	let latestRecentWebSearchInput: ResponseInput | undefined;
@@ -120,7 +120,7 @@ export default function codexConversion(pi: ExtensionAPI) {
 
 	function renderBackgroundShellWidget(ctx = backgroundBashWidget.ctx): void {
 		if (!ctx) return;
-		if (!state.config.ui.backgroundShellWidget) {
+		if (!state.config.ui.backgroundShellWidget || !state.config.tools.backgroundShellSessions) {
 			clearBackgroundShellWidget();
 			return;
 		}
@@ -131,12 +131,13 @@ export default function codexConversion(pi: ExtensionAPI) {
 		registerCoreTools(config);
 		ensureOptionalNativeToolsRegistered(config);
 		sessions.setBaseEnv(bundledPathToolsEnv(config));
-		if (!config.ui.backgroundShellWidget) clearBackgroundShellWidget();
+		sessions.setBackgroundSessions(config.tools.backgroundShellSessions);
+		if (!config.ui.backgroundShellWidget || !config.tools.backgroundShellSessions) clearBackgroundShellWidget();
 		else renderBackgroundShellWidget();
 	}
 
 	registerCodexCommand(pi, state, applyConfig, { sessions, widget: backgroundBashWidget });
-	registerBackgroundBashWidgetShortcuts(pi, backgroundBashWidget, sessions, state.config.ui, () => state.config.ui.backgroundShellWidget);
+	registerBackgroundBashWidgetShortcuts(pi, backgroundBashWidget, sessions, state.config.ui, () => state.config.ui.backgroundShellWidget && state.config.tools.backgroundShellSessions);
 
 	pi.registerMessageRenderer(NATIVE_COMPACTION_DISPLAY_MESSAGE_TYPE, (message, _options, theme) => {
 		const box = new Box(1, 1, (text) => theme.bg("customMessageBg", text));
@@ -175,6 +176,7 @@ export default function codexConversion(pi: ExtensionAPI) {
 		state.cwd = ctx.cwd;
 		state.config = readCodexConversionConfig();
 		sessions.setBaseEnv(bundledPathToolsEnv());
+		sessions.setBackgroundSessions(state.config.tools.backgroundShellSessions);
 		state.promptSkills = extractPiPromptSkills(ctx.getSystemPrompt());
 		tracker.clear();
 		clearApplyPatchRenderState();
@@ -230,12 +232,15 @@ export default function codexConversion(pi: ExtensionAPI) {
 			return undefined;
 		}
 		const skills = resolvePromptSkills(event.systemPromptOptions?.skills, hasNoSkillsFlag() ? [] : state.promptSkills);
+		const promptTools = state.config.mode === "path"
+			? { ...state.config.tools, viewImage: supportsViewImageInputs(ctx.model) || state.config.tools.viewImageFallback }
+			: { backgroundShellSessions: state.config.tools.backgroundShellSessions };
 		return {
 			systemPrompt: buildCodexSystemPrompt(event.systemPrompt, {
 				skills,
 				shell: getDefaultCodexRuntimeShell(),
 				mode: state.config.mode,
-				tools: state.config.mode === "path" ? { ...state.config.tools, viewImage: supportsViewImageInputs(ctx.model) || state.config.tools.viewImageFallback } : undefined,
+				tools: promptTools,
 			}),
 		};
 	});

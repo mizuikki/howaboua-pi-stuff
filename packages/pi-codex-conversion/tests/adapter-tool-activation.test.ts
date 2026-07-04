@@ -55,6 +55,16 @@ test("syncAdapter preserves unrelated tools across repeated syncs", () => {
 	assert.deepEqual(pi.activeTools(), ["exec_command", "write_stdin", "apply_patch", "custom_search", "custom_image", "parallel"]);
 });
 
+test("syncAdapter omits write_stdin when background shell sessions are disabled", () => {
+	const pi = createToolHarness(["read", "bash", "edit", "write", "write_stdin", "parallel"]);
+	const ctx = createContext({ provider: "openai", api: "openai-responses", id: "gpt-5" });
+	const state = createAdapterState({ tools: { ...DEFAULT_CODEX_CONVERSION_CONFIG.tools, backgroundShellSessions: false } });
+
+	syncAdapter(pi as never, ctx as never, state);
+
+	assert.deepEqual(pi.activeTools(), ["exec_command", "apply_patch", "parallel"]);
+});
+
 test("syncAdapter leaves PATH tools to shell for configured custom providers", () => {
 	const pi = createToolHarness(["read", "bash", "edit", "write", "parallel"]);
 	const ctx = createContext({ provider: "my-provider", api: "custom-responses", id: "gpt-5" });
@@ -63,6 +73,16 @@ test("syncAdapter leaves PATH tools to shell for configured custom providers", (
 	syncAdapter(pi as never, ctx as never, state);
 
 	assert.deepEqual(pi.activeTools(), ["exec_command", "write_stdin", "parallel"]);
+});
+
+test("syncAdapter omits write_stdin in PATH mode when background shell sessions are disabled", () => {
+	const pi = createToolHarness(["read", "bash", "edit", "write", "write_stdin", "parallel"]);
+	const ctx = createContext({ provider: "my-provider", api: "custom-responses", id: "gpt-5" });
+	const state = createAdapterState({ mode: "path", scope: { allProviders: "off", additionalProviders: ["my-provider"] }, tools: { ...DEFAULT_CODEX_CONVERSION_CONFIG.tools, backgroundShellSessions: false } });
+
+	syncAdapter(pi as never, ctx as never, state);
+
+	assert.deepEqual(pi.activeTools(), ["exec_command", "parallel"]);
 });
 
 test("applyPatchOnly overlays only apply_patch without Codex toolkit rewrites", () => {

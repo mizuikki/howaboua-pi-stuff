@@ -25,6 +25,7 @@ export function migrateCodexConversionConfigIfNeeded(value: unknown): { migrated
 			webRun: adapterProviderCodexToolsDisabled ? false : typeof value["webSearch"] === "boolean" ? value["webSearch"] : DEFAULT_CODEX_CONVERSION_CONFIG.tools["webRun"],
 			imageGeneration: adapterProviderCodexToolsDisabled ? false : typeof value["imageGeneration"] === "boolean" ? value["imageGeneration"] : DEFAULT_CODEX_CONVERSION_CONFIG.tools["imageGeneration"],
 			viewImageFallback: DEFAULT_CODEX_CONVERSION_CONFIG.tools["viewImageFallback"],
+			backgroundShellSessions: DEFAULT_CODEX_CONVERSION_CONFIG.tools["backgroundShellSessions"],
 			applyPatchOnly: typeof value["applyPatchOnly"] === "boolean" ? value["applyPatchOnly"] : DEFAULT_CODEX_CONVERSION_CONFIG.tools["applyPatchOnly"],
 			viewImageOnly: DEFAULT_CODEX_CONVERSION_CONFIG.tools["viewImageOnly"],
 			webRunOnly: DEFAULT_CODEX_CONVERSION_CONFIG.tools["webRunOnly"],

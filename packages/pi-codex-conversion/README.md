@@ -106,7 +106,7 @@ Advanced users with custom Codex-compatible providers can add provider ids in Ge
 }
 ```
 
-**Tools** shows required adapter behavior and optional web/image/apply-patch prompt features. **OpenAI** controls fast mode, verbosity, cached WebSocket upgrade, web search model, and compaction model/reasoning.
+**Tools** shows required adapter behavior, background shell sessions, and optional web/image/apply-patch prompt features. **OpenAI** controls fast mode, verbosity, cached WebSocket upgrade, web search model, and compaction model/reasoning.
 
 - `webSearchModel` accepts `current`, `gpt-5.5`, `gpt-5.4`, `gpt-5.4-mini`, or `gpt-5.3-codex-spark`. The default is `gpt-5.4-mini`.
 - `compactionModel` accepts the same values. `current` keeps native Responses compaction on the active session model instead of forcing a separate compaction model.
@@ -128,6 +128,7 @@ That matters most for process control, PTYs, patch application, image handling, 
 ## Details worth knowing
 
 - `exec_command` and `write_stdin` use a bundled Rust exec bridge; `tty: true` runs through a PTY for interactive commands.
+- Background shell sessions can be turned off in Tools; `write_stdin` is deactivated and long commands are terminated instead of returning a `session_id`.
 - PATH mode prepends the package `bin` directory to exec session `PATH` so bundled Codex tools are available in shell commands.
 - `imagegen` waits up to five minutes in a foreground `exec_command` call before falling back to a resumable session.
 - The package includes bundled binaries and vendored Rust source for the PATH tools.

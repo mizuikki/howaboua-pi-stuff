@@ -102,6 +102,57 @@ test("exec session manager can terminate running sessions", async () => {
 	}
 });
 
+test("exec session manager can disable background sessions", async () => {
+	const sessions = createExecSessionManager({ minNonInteractiveExecYieldTimeMs: 50, minEmptyWriteYieldTimeMs: 50, maxSessionBufferChars: 4096, backgroundSessions: false });
+	const updates: UnifiedExecResult[] = [];
+	try {
+		const result = await sessions.exec(
+			{
+				cmd: "printf start && sleep 5 && printf end",
+				shell: "/bin/bash",
+				login: false,
+				yield_time_ms: 50,
+			},
+			process.cwd(),
+			undefined,
+			(update) => updates.push(update),
+		);
+
+		assert.equal(result.session_id, undefined);
+		assert.notEqual(result.exit_code, 0);
+		assert.match(result.output, /start/);
+		assert.equal(sessions.listSessions().length, 0);
+		assert.equal(updates.some((update) => update.session_id !== undefined), false);
+		await assert.rejects(() => sessions.write({ session_id: 1, yield_time_ms: 50 }), /background shell sessions are disabled/i);
+	} finally {
+		sessions.shutdown();
+	}
+});
+
+test("disabling background sessions clears running sessions", async () => {
+	const sessions = createFastTestExecSessionManager();
+	try {
+		const started = await sessions.exec(
+			{
+				cmd: "sleep 5",
+				shell: "/bin/bash",
+				login: false,
+				yield_time_ms: 50,
+			},
+			process.cwd(),
+		);
+
+		assert.equal(typeof started.session_id, "number");
+		assert.equal(sessions.listSessions().length, 1);
+		sessions.setBackgroundSessions(false);
+		assert.equal(sessions.listSessions().length, 0);
+		assert.equal(sessions.hasSession(started.session_id!), false);
+		await assert.rejects(() => sessions.write({ session_id: started.session_id!, yield_time_ms: 50 }), /background shell sessions are disabled/i);
+	} finally {
+		sessions.shutdown();
+	}
+});
+
 test("exec session manager terminates child processes for non-tty sessions", { skip: process.platform === "win32" }, async () => {
 	const sessions = createFastTestExecSessionManager();
 	const dir = mkdtempSync(join(tmpdir(), "pi-codex-session-"));
