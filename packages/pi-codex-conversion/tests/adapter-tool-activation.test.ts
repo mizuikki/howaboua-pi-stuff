@@ -97,6 +97,22 @@ test("pi built-in tools keep Pi core tools while preserving Codex runtime featur
 	assert.equal(shouldUseCodexToolSurface(ctx as never, state.config), false);
 });
 
+test("pi built-in tools keep runtime features when extra-only flags are enabled", () => {
+	const pi = createToolHarness(["read", "bash", "edit", "write", "parallel"]);
+	const ctx = createContext({ provider: "openai-codex", api: "openai-codex-responses", id: "gpt-5" });
+	const state = createAdapterState({
+		toolSurface: "pi",
+		compaction: { responsesCompaction: true },
+		tools: { ...DEFAULT_CODEX_CONVERSION_CONFIG.tools, applyPatchOnly: true },
+	});
+
+	syncAdapter(pi as never, ctx as never, state);
+
+	assert.deepEqual(pi.activeTools(), ["read", "bash", "edit", "write", "parallel", "apply_patch", "web_run", "imagegen"]);
+	assert.equal(shouldUseCodexRuntimeFeatures(ctx as never, state.config), true);
+	assert.equal(shouldUseNativeResponsesCompaction(ctx as never, state.config), true);
+});
+
 test("applyPatchOnly overlays only apply_patch without Codex toolkit rewrites", () => {
 	const pi = createToolHarness(["read", "bash", "edit", "write", "parallel"]);
 	const ctx = createContext({ provider: "openai-codex", api: "openai-codex-responses", id: "gpt-5" });

@@ -72,6 +72,7 @@ export function isEffectiveOpenAICodexContext(ctx: ExtensionContext, config: Cod
 }
 
 export function shouldUseExtraToolsOnly(ctx: ExtensionContext, config: CodexConversionConfig): boolean {
+	if (config.toolSurface === "pi") return false;
 	if (!hasExtraToolsOnlyConfig(config)) return false;
 	if (usesExtraToolsOnlyOnAllProviders(config)) return true;
 	return config.scope.allProviders === "off" && (isConfiguredAdapterProvider(ctx, config) || isCodexLikeContext(ctx));
