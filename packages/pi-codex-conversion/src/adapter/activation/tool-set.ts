@@ -14,9 +14,9 @@ export function buildExtraToolsOnlyStatusText(tools: string[], theme?: StatusThe
 	return formatStatusText(` • extra tools${tools.length > 0 ? `: ${tools.join(", ")}` : ""}`, theme);
 }
 
-export function buildStatusText(options: { mode?: "normal" | "path" | undefined; verbosity?: string | undefined; webSearch?: boolean | undefined; imageGeneration?: boolean | undefined; fast: boolean; useOnAllModels: boolean; additionalProvider?: boolean | undefined; compaction?: { enabled: boolean; model: string; reasoning: string } | undefined }, theme?: StatusTheme | undefined): string {
+export function buildStatusText(options: { toolSurface?: "codex" | "pi" | undefined; mode?: "normal" | "path" | undefined; verbosity?: string | undefined; webSearch?: boolean | undefined; imageGeneration?: boolean | undefined; fast: boolean; useOnAllModels: boolean; additionalProvider?: boolean | undefined; compaction?: { enabled: boolean; model: string; reasoning: string } | undefined }, theme?: StatusTheme | undefined): string {
 	const extras = [
-		options.mode === "path" ? "PATH mode" : undefined,
+		options.toolSurface === "pi" ? "Pi tools" : options.mode === "path" ? "PATH mode" : undefined,
 		options.useOnAllModels ? "all models" : undefined,
 		options.additionalProvider ? "additional provider" : undefined,
 		options.webSearch ? "web search" : undefined,

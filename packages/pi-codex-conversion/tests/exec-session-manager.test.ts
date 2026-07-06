@@ -45,7 +45,7 @@ test("exec session manager supports long-running commands via write_stdin", asyn
 	try {
 		const started = await sessions.exec(
 			{
-				cmd: "printf ready && read line && printf ':%s' \"$line\"",
+				cmd: "printf ready && read line && printf ':%s' \"$line\" && sleep 0.1",
 				shell: "/bin/bash",
 				login: false,
 				tty: true,

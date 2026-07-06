@@ -144,6 +144,11 @@ function formatAllProvidersMode(value: CodexConversionConfig["scope"]["allProvid
 	return value === "extras" ? "only extras" : value;
 }
 
+function formatBuiltinToolsMode(config: CodexConversionConfig): string {
+	if (config.toolSurface === "pi") return "pi";
+	return config.mode === "path" ? "codex path" : "codex";
+}
+
 function formatCodexSettings(config: CodexConversionConfig): string {
 	const extraTools = [
 		config.tools.applyPatchOnly ? "apply_patch" : undefined,
@@ -151,5 +156,5 @@ function formatCodexSettings(config: CodexConversionConfig): string {
 		config.tools.webRunOnly ? "web_run" : undefined,
 		config.tools.imageGenerationOnly ? "imagegen" : undefined,
 	].filter(Boolean).join(", ") || "off";
-	return `Codex settings: all models ${formatAllProvidersMode(config.scope.allProviders)}, additional providers ${config.scope.additionalProviders.length > 0 ? config.scope.additionalProviders.join(", ") : "none"}, statusline ${config.ui.statusLine ? "on" : "off"}, tool renaming ${config.ui.toolRenaming ? "on" : "off"}, compact tools ${config.ui.compactTools ? "on" : "off"}, background shell sessions ${config.tools.backgroundShellSessions ? "on" : "off"}, background shells widget ${config.ui.backgroundShellWidget ? "on" : "off"}, image descriptions ${config.tools.viewImageFallback ? "on" : "off"}, extra tools only ${extraTools}, fast ${config.openai.fast ? "on" : "off"}, cached websocket upgrade ${config.openai.forceCachedWebSockets === false ? "off" : "on"}, web search auth ${config.openai.webSearchAuth}, responses compaction ${(config.compaction.responsesCompaction ?? false) ? "on" : "off"} (${config.openai.compactionModel}/${config.openai.compactionReasoning}), verbosity ${config.openai.verbosity}`;
+	return `Codex settings: built-in tools ${formatBuiltinToolsMode(config)}, all models ${formatAllProvidersMode(config.scope.allProviders)}, additional providers ${config.scope.additionalProviders.length > 0 ? config.scope.additionalProviders.join(", ") : "none"}, statusline ${config.ui.statusLine ? "on" : "off"}, tool renaming ${config.ui.toolRenaming ? "on" : "off"}, compact tools ${config.ui.compactTools ? "on" : "off"}, background shell sessions ${config.tools.backgroundShellSessions ? "on" : "off"}, background shells widget ${config.ui.backgroundShellWidget ? "on" : "off"}, image descriptions ${config.tools.viewImageFallback ? "on" : "off"}, extra tools only ${extraTools}, fast ${config.openai.fast ? "on" : "off"}, cached websocket upgrade ${config.openai.forceCachedWebSockets === false ? "off" : "on"}, web search auth ${config.openai.webSearchAuth}, responses compaction ${(config.compaction.responsesCompaction ?? false) ? "on" : "off"} (${config.openai.compactionModel}/${config.openai.compactionReasoning}), verbosity ${config.openai.verbosity}`;
 }

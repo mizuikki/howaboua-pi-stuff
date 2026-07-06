@@ -3,7 +3,7 @@
 > [!NOTE]
 > This version is a major rewrite. If you hit regressions, reinstall the last pre-rewrite build with `pi install npm:@howaboua/pi-codex-conversion@1.5.21` and please report the issue.
 
-GPT/Codex models are strongest when the tool surface looks like the Codex CLI they were trained around: shell commands, resumable terminal sessions, and patch-based edits. This extension brings that workflow to Pi while keeping Pi's runtime, sessions, project context, skills, and UI. For the brave, PATH mode shifts the toolkit into Pi's internal PATH, instead of the JSON-defined tool schema.
+GPT/Codex models are strongest when the tool surface looks like the Codex CLI they were trained around: shell commands, resumable terminal sessions, and patch-based edits. This extension brings that workflow to Pi while keeping Pi's runtime, sessions, project context, skills, and UI. You can now choose whether the built-in tool surface stays Pi-native or switches to the Codex-shaped toolkit. For the brave, Codex PATH mode shifts the toolkit into Pi's internal PATH, instead of the JSON-defined tool schema.
 
 Tool execution uses bundled Rust helpers for better process isolation and lower Pi runtime blast radius; see [Why bundled Rust tools?](#why-bundled-rust-tools). PATH mode exposes extra Codex tools as shell commands on an extension-injected internal PATH; see [PATH_TOOLS.md](./PATH_TOOLS.md).
 
@@ -17,15 +17,35 @@ pi install npm:@howaboua/pi-codex-conversion
 
 ## What changes in Pi
 
-- Adapter mode activates automatically for OpenAI `gpt*` and `codex*` models, then restores the previous tool set when you switch away.
-- Pi's composed prompt is preserved; the extension only adds a small Codex-style tool-use nudge.
+- Codex runtime features activate automatically for OpenAI `gpt*` and `codex*` models, then restore the previous tool set when you switch away.
+- The built-in tools surface can stay Pi-native or switch to Codex. Codex prompt/tool guidance is only injected when the Codex tool surface is selected.
 - Shell activity is rendered with Codex-like labels such as `Ran`, `Explored`, `Read`, and background-terminal status.
 - PATH image outputs from `view_image` and `imagegen` render inline in chat.
 - Raw command output is still available by expanding the tool result.
 
-## Active tools in adapter mode
+## Built-in tools surfaces
 
-Normal mode keeps the familiar Pi function-tool surface:
+### Pi built-in tools
+
+Pi tools mode keeps Pi's native built-ins:
+
+- `read`
+- `bash`
+- `edit`
+- `write`
+
+Optional extras can still be layered on when enabled and supported:
+
+- `web_run` — web search through the bundled Rust web tool
+- `imagegen` — Codex-backed image generation and image edits
+- `view_image` — only when explicitly added as an extra or when text-model image descriptions are enabled
+- `apply_patch` — only when explicitly added as an extra
+
+In this mode, Pi keeps its native prompt/tool guidance. The extension still applies Codex runtime features such as request shaping, `fast`, and native compaction when the current model/provider is in scope.
+
+### Codex built-in tools
+
+Codex normal mode keeps the familiar Pi function-tool surface:
 
 - `exec_command` — shell execution with Codex-style `cmd` parameters and resumable sessions
 - `write_stdin` — continue or poll a running exec session; omitted when Background shell sessions is off
@@ -36,7 +56,7 @@ Normal mode keeps the familiar Pi function-tool surface:
 
 For configured `openai-responses` providers, `web_run` uses that provider's `/responses` endpoint and API key. Configure this in the settings UI with `Web search auth` plus `Additional providers`.
 
-PATH mode narrows the structured tool surface to shell control only:
+Codex PATH mode narrows the structured tool surface to shell control only:
 
 - `exec_command` — shell execution with Codex-style `cmd` parameters and resumable sessions
 - `write_stdin` — continue or poll a running exec session; omitted when Background shell sessions is off
@@ -48,9 +68,9 @@ In PATH mode, Codex-style extras live on the extension-injected internal PATH:
 - `web_run` — web search
 - `imagegen` — Codex-backed image generation and image edits
 
-Notably:
+Notably for the Codex tool surface:
 
-- there is **no** dedicated `read`, `edit`, or `write` tool in adapter mode
+- there is **no** dedicated `read`, `edit`, or `write` tool in Codex mode
 - local text-file inspection should happen through `exec_command`
 - file creation and edits should default to `apply_patch`; in PATH mode that is the shell command
 - in PATH mode, image/web tools run through `exec_command` as PATH tools, not Pi function tools
@@ -94,7 +114,7 @@ Settings are saved globally in `~/.pi/agent/pi-codex-conversion.json`.
 
 The settings UI has **General**, **Tools**, **OpenAI**, **Usage**, and **About** tabs. **Usage** refreshes automatically when opened, can be refreshed manually with `R`, and shows banked Codex rate-limit resets with their expiry above the usage windows. When resets are available, press `Ctrl+R` in the Usage tab to use one. After a reset attempt, press `R` before using another reset.
 
-**General** controls PATH mode, scope, status UI, background shells, and whether native Responses compaction is enabled. Native compaction applies to OpenAI Codex and explicitly added providers; all-model scope only changes the tool and prompt adapter. PATH mode switches the adapter to the shell-only surface above.
+**General** controls the built-in tools surface (`pi`, `codex`, or `codex path`), scope, status UI, background shells, and whether native Responses compaction is enabled. Native compaction applies to OpenAI Codex and explicitly added providers; all-model scope only changes the tool surface and Codex runtime feature scope. `codex path` switches the Codex surface to the shell-only structured surface above.
 
 Advanced users with custom Codex-compatible providers can add provider ids in General, or by editing `~/.pi/agent/pi-codex-conversion.json`:
 
@@ -106,7 +126,7 @@ Advanced users with custom Codex-compatible providers can add provider ids in Ge
 }
 ```
 
-**Tools** shows required adapter behavior, background shell sessions, and optional web/image/apply-patch prompt features. **OpenAI** controls fast mode, verbosity, cached WebSocket upgrade, web search model, and compaction model/reasoning.
+**Tools** shows the current shell/edit/image behavior for the selected built-in tools surface, plus background shell sessions and optional web/image/apply-patch extras. **OpenAI** controls fast mode, verbosity, cached WebSocket upgrade, web search model, and compaction model/reasoning.
 
 - `webSearchModel` accepts `current`, `gpt-5.5`, `gpt-5.4`, `gpt-5.4-mini`, or `gpt-5.3-codex-spark`. The default is `gpt-5.4-mini`.
 - `compactionModel` accepts the same values. `current` keeps native Responses compaction on the active session model instead of forcing a separate compaction model.
@@ -127,9 +147,9 @@ That matters most for process control, PTYs, patch application, image handling, 
 
 ## Details worth knowing
 
-- `exec_command` and `write_stdin` use a bundled Rust exec bridge; `tty: true` runs through a PTY for interactive commands.
+- `exec_command` and `write_stdin` use a bundled Rust exec bridge when the Codex tool surface is selected; `tty: true` runs through a PTY for interactive commands.
 - Background shell sessions can be turned off in Tools; `write_stdin` is deactivated and long commands are terminated instead of returning a `session_id`.
-- PATH mode prepends the package `bin` directory to exec session `PATH` so bundled Codex tools are available in shell commands.
+- Codex PATH mode prepends the package `bin` directory to exec session `PATH` so bundled Codex tools are available in shell commands.
 - `imagegen` waits up to five minutes in a foreground `exec_command` call before falling back to a resumable session.
 - The package includes bundled binaries and vendored Rust source for the PATH tools.
 - If native compaction fails, the extension falls back to Pi's normal compaction flow. When an older native compacted window exists, it is included in that Pi fallback summarization request so OpenAI can still use the prior opaque context server-side.

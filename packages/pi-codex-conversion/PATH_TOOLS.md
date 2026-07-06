@@ -1,6 +1,8 @@
 # PATH tools
 
-This package exposes Codex-style tools in two modes.
+This package exposes Codex-style tools in two modes when the built-in tool surface is set to Codex.
+
+When the built-in tool surface is set to Pi, Pi keeps its native `read`/`bash`/`edit`/`write` tools and this package only layers on optional extra tools such as `web_run` and `imagegen`. In that mode, Codex-specific prompt injection is skipped.
 
 In normal mode, Codex tools are registered as Pi-native tools with JSON schemas.
 

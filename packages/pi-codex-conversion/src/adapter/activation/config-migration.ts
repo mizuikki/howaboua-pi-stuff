@@ -17,6 +17,7 @@ export function migrateCodexConversionConfigIfNeeded(value: unknown): { migrated
 
 	const config: CodexConversionConfig = {
 		...structuredClone(DEFAULT_CODEX_CONVERSION_CONFIG),
+		toolSurface: DEFAULT_CODEX_CONVERSION_CONFIG.toolSurface,
 	scope: {
 			allProviders: value["useOnAllModels"] === true ? "on" : value["useOnAllModels"] === false ? "off" : DEFAULT_CODEX_CONVERSION_CONFIG.scope["allProviders"],
 			additionalProviders: value["useAdapterProviders"] === true ? normalizeProviderList(value["adapterProviders"]) : [],

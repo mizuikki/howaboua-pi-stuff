@@ -220,10 +220,17 @@ function buildItems(tab: SettingsTab, draft: CodexConversionConfig, theme: Theme
 	if (tab === "usage" || tab === "about") return [];
 
 	if (tab === "tools") {
+		const shellCommandsMode = draft.toolSurface === "pi" ? "pi bash" : draft.mode === "path" ? "exec/path" : "exec";
+		const applyPatchMode = draft.toolSurface === "pi"
+			? (draft.tools.applyPatchOnly ? "extra" : "off")
+			: draft.mode === "path" ? "path command" : "required";
+		const viewImageMode = draft.toolSurface === "pi"
+			? (draft.tools.viewImageOnly || draft.tools.viewImageFallback ? "extra" : "off")
+			: "required";
 		return [
-			{ id: "shellCommands", label: "Shell commands", currentValue: "required", values: ["required"] },
-			{ id: "applyPatch", label: "Apply patch", currentValue: "required", values: ["required"] },
-			{ id: "viewImage", label: "View image", currentValue: "required", values: ["required"] },
+			{ id: "shellCommands", label: "Shell commands", currentValue: shellCommandsMode, values: [shellCommandsMode] },
+			{ id: "applyPatch", label: "Apply patch", currentValue: applyPatchMode, values: [applyPatchMode] },
+			{ id: "viewImage", label: "View image", currentValue: viewImageMode, values: [viewImageMode] },
 			{ id: "backgroundShellSessions", label: "Background shell sessions", currentValue: draft.tools.backgroundShellSessions ? "on" : "off", values: ["off", "on"] },
 			{ id: "viewImageFallback", label: "Image descriptions", currentValue: draft.tools.viewImageFallback ? "on" : "off", values: ["off", "on"] },
 			{ id: "webRun", label: "Web search", currentValue: draft.tools.webRun ? "on" : "off", values: ["off", "on"] },
@@ -248,13 +255,13 @@ function buildItems(tab: SettingsTab, draft: CodexConversionConfig, theme: Theme
 	}
 
 	return [
-		{ id: "mode", label: "PATH mode", currentValue: draft.mode === "path" ? "on" : "off", values: ["off", "on"] },
+		{ id: "toolSurface", label: "Built-in tools", currentValue: formatToolSurfaceSetting(draft), values: ["pi", "codex", "codex path"] },
 		{ id: "allProviders", label: "Use for all providers/models", currentValue: formatAllProvidersMode(draft.scope.allProviders), values: ["off", "on", "only extras"] },
 		{
 			id: "additionalProviders",
 			label: "Additional providers",
 			currentValue: formatProviderList(draft.scope.additionalProviders),
-			submenu: (currentValue, done) => new TextSettingSubmenu("Additional providers", "Comma-separated provider ids that should also use the selected adapter mode. Configured openai-responses providers can also power web_run when Web search auth is auto.", currentValue, (value) => done(formatProviderList(normalizeProviderListFromText(value))), () => done(), theme),
+			submenu: (currentValue, done) => new TextSettingSubmenu("Additional providers", "Comma-separated provider ids that should also use the selected tool surface and Codex runtime features. Configured openai-responses providers can also power web_run when Web search auth is auto.", currentValue, (value) => done(formatProviderList(normalizeProviderListFromText(value))), () => done(), theme),
 		},
 		{ id: "statusLine", label: "Statusline", currentValue: draft.ui.statusLine ? "on" : "off", values: ["off", "on"] },
 		{ id: "toolRenaming", label: "Tool renaming", currentValue: draft.ui.toolRenaming ? "on" : "off", values: ["off", "on"] },
@@ -266,7 +273,7 @@ function buildItems(tab: SettingsTab, draft: CodexConversionConfig, theme: Theme
 }
 
 function applySettingChange(id: string, value: string, draft: CodexConversionConfig): CodexConversionConfig {
-	if (id === "mode") return { ...draft, mode: value === "on" ? "path" : "normal" };
+	if (id === "toolSurface") return parseToolSurfaceSetting(value, draft);
 	if (id === "allProviders") return { ...draft, scope: { ...draft.scope, allProviders: parseAllProvidersMode(value) } };
 	if (id === "additionalProviders") return { ...draft, scope: { ...draft.scope, additionalProviders: normalizeProviderListFromText(value) } };
 	if (id === "statusLine") return { ...draft, ui: { ...draft.ui, statusLine: value === "on" } };
@@ -294,6 +301,17 @@ function applySettingChange(id: string, value: string, draft: CodexConversionCon
 
 function formatProviderList(providers: string[]): string {
 	return providers.join(", ");
+}
+
+function formatToolSurfaceSetting(config: CodexConversionConfig): string {
+	if (config.toolSurface === "pi") return "pi";
+	return config.mode === "path" ? "codex path" : "codex";
+}
+
+function parseToolSurfaceSetting(value: string, draft: CodexConversionConfig): CodexConversionConfig {
+	if (value === "pi") return { ...draft, toolSurface: "pi" };
+	if (value === "codex path") return { ...draft, toolSurface: "codex", mode: "path" };
+	return { ...draft, toolSurface: "codex", mode: "normal" };
 }
 
 function formatAllProvidersMode(value: CodexConversionConfig["scope"]["allProviders"]): string {

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { DEFAULT_CODEX_CONVERSION_CONFIG } from "../src/adapter/activation/config.ts";
-import { shouldUseNativeResponsesCompaction, syncAdapter } from "../src/adapter/activation/activation.ts";
+import { shouldUseCodexRuntimeFeatures, shouldUseCodexToolSurface, shouldUseNativeResponsesCompaction, syncAdapter } from "../src/adapter/activation/activation.ts";
 import type { AdapterState } from "../src/adapter/activation/state.ts";
 import { mergeAdapterTools } from "../src/index.ts";
 
@@ -83,6 +83,34 @@ test("syncAdapter omits write_stdin in PATH mode when background shell sessions 
 	syncAdapter(pi as never, ctx as never, state);
 
 	assert.deepEqual(pi.activeTools(), ["exec_command", "parallel"]);
+});
+
+test("pi built-in tools keep Pi core tools while preserving Codex runtime features", () => {
+	const pi = createToolHarness(["read", "bash", "edit", "write", "parallel"]);
+	const ctx = createContext({ provider: "openai-codex", api: "openai-codex-responses", id: "gpt-5" });
+	const state = createAdapterState({ toolSurface: "pi" });
+
+	syncAdapter(pi as never, ctx as never, state);
+
+	assert.deepEqual(pi.activeTools(), ["read", "bash", "edit", "write", "parallel", "web_run", "imagegen"]);
+	assert.equal(shouldUseCodexRuntimeFeatures(ctx as never, state.config), true);
+	assert.equal(shouldUseCodexToolSurface(ctx as never, state.config), false);
+});
+
+test("pi built-in tools keep runtime features when extra-only flags are enabled", () => {
+	const pi = createToolHarness(["read", "bash", "edit", "write", "parallel"]);
+	const ctx = createContext({ provider: "openai-codex", api: "openai-codex-responses", id: "gpt-5" });
+	const state = createAdapterState({
+		toolSurface: "pi",
+		compaction: { responsesCompaction: true },
+		tools: { ...DEFAULT_CODEX_CONVERSION_CONFIG.tools, applyPatchOnly: true },
+	});
+
+	syncAdapter(pi as never, ctx as never, state);
+
+	assert.deepEqual(pi.activeTools(), ["read", "bash", "edit", "write", "parallel", "apply_patch", "web_run", "imagegen"]);
+	assert.equal(shouldUseCodexRuntimeFeatures(ctx as never, state.config), true);
+	assert.equal(shouldUseNativeResponsesCompaction(ctx as never, state.config), true);
 });
 
 test("applyPatchOnly overlays only apply_patch without Codex toolkit rewrites", () => {
