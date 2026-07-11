@@ -42,6 +42,7 @@ export type NativeCompactionRuntime = {
 	baseUrl: string;
 	apiKey?: string | undefined;
 	headers?: Record<string, string> | undefined;
+	responsesUrl: string;
 	compactPath: string;
 	compactUrl: string;
 	payload?: ResponsesCompatibleRequestPayload | undefined;
@@ -101,6 +102,16 @@ export function buildCompactUrl(baseUrl: string, api: DefaultSupportedApi): stri
 
 export function buildCompactPath(api: DefaultSupportedApi): string {
 	return api === "openai-codex-responses" ? CODEX_COMPACT_PATH : OPENAI_COMPACT_PATH;
+}
+
+export function buildResponsesUrl(baseUrl: string, api: DefaultSupportedApi): string {
+	const normalized = normalizeBaseUrl(baseUrl) ?? baseUrl;
+	if (api === "openai-codex-responses") {
+		if (normalized.endsWith("/codex/responses")) return normalized;
+		if (normalized.endsWith("/codex")) return `${normalized}/responses`;
+		return `${normalized}/codex/responses`;
+	}
+	return normalized.endsWith("/responses") ? normalized : `${normalized}/responses`;
 }
 
 export function isSupportedProvider(provider: string): provider is BuiltInSupportedProvider {
@@ -254,6 +265,7 @@ export async function resolveNativeCompactionEnvironment(
 			baseUrl: descriptor.baseUrl,
 			apiKey,
 			headers,
+			responsesUrl: buildResponsesUrl(descriptor.baseUrl, descriptor.api),
 			compactPath: buildCompactPath(descriptor.api),
 			compactUrl: buildCompactUrl(descriptor.baseUrl, descriptor.api),
 			payload: requestPayload,

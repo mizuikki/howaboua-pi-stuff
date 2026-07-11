@@ -102,7 +102,7 @@ test("pi built-in tools keep runtime features when extra-only flags are enabled"
 	const ctx = createContext({ provider: "openai-codex", api: "openai-codex-responses", id: "gpt-5" });
 	const state = createAdapterState({
 		toolSurface: "pi",
-		compaction: { responsesCompaction: true },
+		compaction: { mode: "v1" },
 		tools: { ...DEFAULT_CODEX_CONVERSION_CONFIG.tools, applyPatchOnly: true },
 	});
 
@@ -125,14 +125,19 @@ test("applyPatchOnly overlays only apply_patch without Codex toolkit rewrites", 
 
 test("all-model mode does not opt non-Codex models into native Responses compaction", () => {
 	const ctx = createContext({ provider: "openai", api: "openai-responses", id: "gpt-5" });
-	const state = createAdapterState({ scope: { allProviders: "on", additionalProviders: [] }, compaction: { responsesCompaction: true } });
+	const state = createAdapterState({ scope: { allProviders: "on", additionalProviders: [] }, compaction: { mode: "v1" } });
 
 	assert.equal(shouldUseNativeResponsesCompaction(ctx as never, state.config), false);
 });
 
 test("native Responses compaction stays scoped to OpenAI Codex and explicit providers", () => {
-	const config = createAdapterState({ scope: { allProviders: "on", additionalProviders: ["my-provider"] }, compaction: { responsesCompaction: true } }).config;
+	const config = createAdapterState({ scope: { allProviders: "on", additionalProviders: ["my-provider"] }, compaction: { mode: "v1" } }).config;
 
 	assert.equal(shouldUseNativeResponsesCompaction(createContext({ provider: "openai-codex", api: "openai-codex-responses", id: "gpt-5" }) as never, config), true);
 	assert.equal(shouldUseNativeResponsesCompaction(createContext({ provider: "my-provider", api: "openai-codex-responses", id: "gpt-5" }) as never, config), true);
+});
+
+test("v2 Responses compaction uses the same provider scope as v1", () => {
+	const config = createAdapterState({ compaction: { mode: "v2" } }).config;
+	assert.equal(shouldUseNativeResponsesCompaction(createContext({ provider: "openai-codex", api: "openai-codex-responses", id: "gpt-5.6" }) as never, config), true);
 });

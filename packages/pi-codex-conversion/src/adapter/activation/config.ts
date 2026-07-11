@@ -7,14 +7,15 @@ export type CodexVerbosity = "low" | "medium" | "high";
 export type ToolSurface = "codex" | "pi";
 export type CodexAdapterMode = "normal" | "path";
 export type AllProvidersMode = "off" | "on" | "extras";
-export type FixedOpenAIModelSelection = "gpt-5.5" | "gpt-5.4" | "gpt-5.4-mini" | "gpt-5.3-codex-spark";
+export type FixedOpenAIModelSelection = "gpt-5.6" | "gpt-5.5" | "gpt-5.4" | "gpt-5.4-mini" | "gpt-5.3-codex-spark";
 export type OpenAIModelSelection = "current" | FixedOpenAIModelSelection;
 export type WebSearchAuthMode = "auto" | "codex";
+export type ResponsesCompactionMode = "off" | "v1" | "v2";
 export type CompactionModel = OpenAIModelSelection;
 export type WebSearchModel = OpenAIModelSelection;
 export type CompactionReasoning = "current" | "minimal" | "low" | "medium" | "high" | "xhigh";
 
-export const FIXED_OPENAI_MODEL_SELECTIONS: readonly FixedOpenAIModelSelection[] = ["gpt-5.5", "gpt-5.4", "gpt-5.4-mini", "gpt-5.3-codex-spark"];
+export const FIXED_OPENAI_MODEL_SELECTIONS: readonly FixedOpenAIModelSelection[] = ["gpt-5.6", "gpt-5.5", "gpt-5.4", "gpt-5.4-mini", "gpt-5.3-codex-spark"];
 export const OPENAI_MODEL_SELECTIONS: readonly OpenAIModelSelection[] = ["current", ...FIXED_OPENAI_MODEL_SELECTIONS];
 export const WEB_SEARCH_AUTH_MODES: readonly WebSearchAuthMode[] = ["auto", "codex"];
 export const COMPACTION_MODELS: readonly CompactionModel[] = OPENAI_MODEL_SELECTIONS;
@@ -45,7 +46,7 @@ export interface CodexConversionConfig {
 		backgroundShellNextShortcut: string;
 		backgroundShellCloseShortcut: string;
 	};
-	compaction: { responsesCompaction: boolean };
+	compaction: { mode: ResponsesCompactionMode };
 	openai: {
 		fast: boolean;
 		verbosity: CodexVerbosity;
@@ -73,7 +74,7 @@ export const DEFAULT_CODEX_CONVERSION_CONFIG: CodexConversionConfig = {
 		backgroundShellNextShortcut: "alt+e",
 		backgroundShellCloseShortcut: "alt+r",
 	},
-	compaction: { responsesCompaction: false },
+	compaction: { mode: "off" },
 	openai: {
 		fast: false,
 		verbosity: "low",
@@ -111,6 +112,10 @@ export function normalizeCodexVerbosity(value: unknown): CodexVerbosity | undefi
 
 export function normalizeWebSearchAuthMode(value: unknown): WebSearchAuthMode | undefined {
 	return typeof value === "string" && (WEB_SEARCH_AUTH_MODES as readonly string[]).includes(value) ? value as WebSearchAuthMode : undefined;
+}
+
+export function normalizeResponsesCompactionMode(value: unknown): ResponsesCompactionMode | undefined {
+	return value === "off" || value === "v1" || value === "v2" ? value : undefined;
 }
 
 export function normalizeOpenAIModelSelection(value: unknown): OpenAIModelSelection | undefined {
@@ -181,7 +186,10 @@ export function normalizeCodexConversionConfig(value: unknown): CodexConversionC
 			backgroundShellNextShortcut: stringValue(ui["backgroundShellNextShortcut"], DEFAULT_CODEX_CONVERSION_CONFIG.ui["backgroundShellNextShortcut"]),
 			backgroundShellCloseShortcut: stringValue(ui["backgroundShellCloseShortcut"], DEFAULT_CODEX_CONVERSION_CONFIG.ui["backgroundShellCloseShortcut"]),
 		},
-		compaction: { responsesCompaction: bool(compaction["responsesCompaction"], DEFAULT_CODEX_CONVERSION_CONFIG.compaction["responsesCompaction"]) },
+		compaction: {
+			mode: normalizeResponsesCompactionMode(compaction["mode"])
+				?? (compaction["responsesCompaction"] === true ? "v1" : DEFAULT_CODEX_CONVERSION_CONFIG.compaction.mode),
+		},
 		openai: {
 			fast: bool(openai["fast"], DEFAULT_CODEX_CONVERSION_CONFIG.openai["fast"]),
 			verbosity: normalizeCodexVerbosity(openai["verbosity"]) ?? DEFAULT_CODEX_CONVERSION_CONFIG.openai["verbosity"],

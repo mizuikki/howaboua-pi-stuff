@@ -43,7 +43,7 @@ export function migrateCodexConversionConfigIfNeeded(value: unknown): { migrated
 			backgroundShellCloseShortcut: stringValue(value["backgroundShellCloseShortcut"], DEFAULT_CODEX_CONVERSION_CONFIG.ui["backgroundShellCloseShortcut"]),
 		},
 		compaction: {
-			responsesCompaction: typeof value["responsesCompaction"] === "boolean" ? value["responsesCompaction"] : DEFAULT_CODEX_CONVERSION_CONFIG.compaction["responsesCompaction"],
+			mode: value["responsesCompaction"] === true ? "v1" : DEFAULT_CODEX_CONVERSION_CONFIG.compaction.mode,
 		},
 		openai: {
 			fast: typeof value["fast"] === "boolean" ? value["fast"] : DEFAULT_CODEX_CONVERSION_CONFIG.openai["fast"],

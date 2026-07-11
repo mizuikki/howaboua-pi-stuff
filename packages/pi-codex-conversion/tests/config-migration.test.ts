@@ -30,7 +30,7 @@ test("old flat config migrates to grouped config and respects disabled provider 
 	assert.equal(config.ui.toolRenaming, true);
 	assert.equal(config.ui.compactTools, false);
 	assert.equal(config.ui.backgroundShellWidget, false);
-	assert.equal(config.compaction.responsesCompaction, true);
+	assert.equal(config.compaction.mode, "v1");
 	assert.equal(config.openai.fast, true);
 	assert.equal(config.openai.verbosity, "high");
 	assert.equal(config.openai.forceCachedWebSockets, false);
@@ -72,4 +72,9 @@ test("grouped config accepts old toolRendering key", () => {
 test("grouped config supports disabling background shell sessions", () => {
 	const config = normalizeCodexConversionConfig({ tools: { backgroundShellSessions: false } });
 	assert.equal(config.tools.backgroundShellSessions, false);
+});
+
+test("grouped config accepts the v2 Responses compaction mode", () => {
+	const config = normalizeCodexConversionConfig({ compaction: { mode: "v2" } });
+	assert.equal(config.compaction.mode, "v2");
 });

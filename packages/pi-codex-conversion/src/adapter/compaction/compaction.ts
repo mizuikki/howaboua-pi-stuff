@@ -1,6 +1,7 @@
 import type { ExtensionAPI, ExtensionContext, SessionBeforeCompactEvent } from "@earendil-works/pi-coding-agent";
 import { clampThinkingLevel, type ModelThinkingLevel, type Tool } from "@earendil-works/pi-ai";
 import { executeNativeCompaction } from "./compact-client.ts";
+import { executeNativeCompactionV2 } from "./v2-client.ts";
 import { extractCompactionSummaryText, hasCompactionOutputItem, sanitizeCompactedWindow, summarizeCompactionOutputForDiagnostics } from "./compaction-output.ts";
 import { findLatestNativeCompactionEntry, findLatestNativeCompactionEntryIndex, resolveLatestNativeCompactionEntry } from "./details-store.ts";
 import { shrinkNativeCompactionRequestForEndpoint } from "./request-shrink.ts";
@@ -14,7 +15,7 @@ import {
 	type NativeCompactionRequestOptions,
 	type ResponsesInputItem,
 } from "./serializer.ts";
-import { createNativeCompactionDetails, createNativeCompactionShimResult, isNativeCompactionDetails, NATIVE_COMPACTION_SHIM_SUMMARY, type NativeCompactionEntry } from "../compaction/types.ts";
+import { createNativeCompactionDetails, createNativeCompactionShimResult, createNativeCompactionV2Details, isNativeCompactionDetails, NATIVE_COMPACTION_SHIM_SUMMARY, type NativeCompactionEntry } from "../compaction/types.ts";
 import { isResponsesContext } from "../prompt/codex-model.ts";
 import { isEffectiveOpenAICodexContext, shouldUseNativeResponsesCompaction } from "../activation/activation.ts";
 import type { AdapterState } from "../activation/state.ts";
@@ -117,7 +118,7 @@ function getCompactionIdentity(entry: { details?: unknown | undefined } | undefi
 		: undefined;
 }
 
-function formatCompactFailureMessage(compactResult: Awaited<ReturnType<typeof executeNativeCompaction>>): string {
+function formatCompactFailureMessage(compactResult: Awaited<ReturnType<typeof executeNativeCompaction>> | Awaited<ReturnType<typeof executeNativeCompactionV2>>): string {
 	if (compactResult.ok) return "OpenAI native compaction succeeded";
 	const status = compactResult.status ? ` HTTP ${compactResult.status}` : "";
 	const friendly = formatCodexUsageLimitError(compactResult.responseJson ?? compactResult.responseText ?? compactResult.errorMessage);
@@ -266,7 +267,14 @@ async function handleCodexSessionBeforeCompactInner(event: SessionBeforeCompactE
 
 	request = shrinkNativeCompactionRequestForEndpoint(request, { contextWindow: compactionTargetModel.contextWindow }).request;
 
-	const compactResult = await executeNativeCompaction({ runtime, request, signal: event.signal });
+	const compactResult = state.config.compaction.mode === "v2"
+		? await executeNativeCompactionV2({
+			runtime,
+			request,
+			signal: event.signal,
+			sessionId: ctx.sessionManager.getSessionId(),
+		})
+		: await executeNativeCompaction({ runtime, request, signal: event.signal });
 	if (!compactResult.ok) {
 		if (compactResult.reason !== "aborted") {
 			notifyNativeCompactionFallback(ctx, state, branchEntries, runtime, formatCompactFailureMessage(compactResult));
@@ -288,7 +296,7 @@ async function handleCodexSessionBeforeCompactInner(event: SessionBeforeCompactE
 		return undefined;
 	}
 	try {
-		const details = createNativeCompactionDetails({
+		const details = (state.config.compaction.mode === "v2" ? createNativeCompactionV2Details : createNativeCompactionDetails)({
 			provider: runtime.provider,
 			api: runtime.api,
 			model: compactionModel,

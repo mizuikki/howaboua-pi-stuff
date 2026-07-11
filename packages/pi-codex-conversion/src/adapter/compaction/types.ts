@@ -1,7 +1,9 @@
 import type { CompactionEntry, CompactionResult } from "@earendil-works/pi-coding-agent";
 
 export const EXTENSION_ID = "openai-native-compaction";
-export const NATIVE_COMPACTION_STRATEGY = "openai-native-compact-v1";
+export const NATIVE_COMPACTION_STRATEGY_V1 = "openai-native-compact-v1";
+export const NATIVE_COMPACTION_STRATEGY_V2 = "openai-native-compact-v2";
+export const NATIVE_COMPACTION_STRATEGY = NATIVE_COMPACTION_STRATEGY_V1;
 export const NATIVE_COMPACTION_SHIM_SUMMARY = "[OpenAI native compaction checkpoint]";
 export const NATIVE_COMPACTION_DISPLAY_MESSAGE_TYPE = "codex-native-compaction-display";
 export const NATIVE_COMPACTION_DISPLAY_TEXT = [
@@ -12,7 +14,7 @@ export const NATIVE_COMPACTION_DISPLAY_TEXT = [
 	"Warning: do not turn Responses compaction off or switch providers mid-session; old context may be much less reliable.",
 ].join("\n");
 
-export type NativeCompactionStrategy = typeof NATIVE_COMPACTION_STRATEGY;
+export type NativeCompactionStrategy = typeof NATIVE_COMPACTION_STRATEGY_V1 | typeof NATIVE_COMPACTION_STRATEGY_V2;
 export type NativeCompactionShimSummary = typeof NATIVE_COMPACTION_SHIM_SUMMARY;
 
 export type NativeCompactionRequestMeta = {
@@ -159,7 +161,7 @@ export function isNativeCompactionDetails(value: unknown): value is NativeCompac
 	const candidate = value as Record<string, unknown>;
 
 	return (
-		candidate["strategy"] === NATIVE_COMPACTION_STRATEGY &&
+		(candidate["strategy"] === NATIVE_COMPACTION_STRATEGY_V1 || candidate["strategy"] === NATIVE_COMPACTION_STRATEGY_V2) &&
 		isNonEmptyString(candidate["provider"]!) &&
 		isNonEmptyString(candidate["api"]!) &&
 		isNonEmptyString(candidate["model"]!) &&
@@ -182,7 +184,7 @@ export function isNativeCompactionShimSummary(value: unknown): value is NativeCo
 
 export function createNativeCompactionDetails(input: CreateNativeCompactionDetailsInput): NativeCompactionDetails {
 	return {
-		strategy: NATIVE_COMPACTION_STRATEGY,
+		strategy: NATIVE_COMPACTION_STRATEGY_V1,
 		provider: normalizeString(input.provider),
 		api: normalizeString(input.api),
 		model: normalizeString(input.model),
@@ -201,6 +203,13 @@ export function createNativeCompactionDetails(input: CreateNativeCompactionDetai
 					: {}),
 			}
 			: undefined,
+	};
+}
+
+export function createNativeCompactionV2Details(input: CreateNativeCompactionDetailsInput): NativeCompactionDetails {
+	return {
+		...createNativeCompactionDetails(input),
+		strategy: NATIVE_COMPACTION_STRATEGY_V2,
 	};
 }
 
