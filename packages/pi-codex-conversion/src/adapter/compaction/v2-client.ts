@@ -1,11 +1,19 @@
+import { Tiktoken } from "js-tiktoken/lite";
+import o200kBaseRanks from "js-tiktoken/ranks/o200k_base";
 import type { NativeCompactionRuntime } from "./compaction-runtime.ts";
 import type { NativeCompactionRequestBody } from "./serializer.ts";
-import { getEncoding } from "js-tiktoken";
 
 const JSON_CONTENT_TYPE = "application/json";
 const RETAINED_MESSAGE_TOKEN_BUDGET = 64_000;
+const DEFAULT_COMPACTION_IDLE_TIMEOUT_MS = 120_000;
 const COMPACTION_TRIGGER = { type: "compaction_trigger" } as const;
-const COMPACTION_TOKEN_ENCODING = getEncoding("o200k_base");
+
+let compactionTokenEncoding: Tiktoken | undefined;
+
+function getCompactionTokenEncoding(): Tiktoken {
+	compactionTokenEncoding ??= new Tiktoken(o200kBaseRanks);
+	return compactionTokenEncoding;
+}
 
 type CompactionStreamEvent = {
 	type?: unknown;
@@ -46,6 +54,7 @@ export type ExecuteNativeCompactionV2Options = {
 	request: NativeCompactionRequestBody;
 	signal?: AbortSignal | undefined;
 	sessionId?: string | undefined;
+	idleTimeoutMs?: number | undefined;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -157,9 +166,9 @@ function estimateMessageTokens(item: Record<string, unknown>): number {
 				.filter(isRecord)
 				.map((part) => (part["type"] === "input_text" || part["type"] === "output_text") && typeof part["text"] === "string" ? part["text"] : "")
 				.join("")
-			: "";
+				: "";
 	try {
-		return COMPACTION_TOKEN_ENCODING.encode(text).length;
+		return getCompactionTokenEncoding().encode(text).length;
 	} catch {
 		return Math.ceil(text.length / 2);
 	}
@@ -168,9 +177,10 @@ function estimateMessageTokens(item: Record<string, unknown>): number {
 function truncateText(text: string, tokenBudget: number): string {
 	if (tokenBudget <= 0) return "";
 	try {
-		const tokens = COMPACTION_TOKEN_ENCODING.encode(text);
+		const encoding = getCompactionTokenEncoding();
+		const tokens = encoding.encode(text);
 		if (tokens.length <= tokenBudget) return text;
-		return COMPACTION_TOKEN_ENCODING.decode(tokens.slice(0, tokenBudget));
+		return encoding.decode(tokens.slice(0, tokenBudget));
 	} catch {
 		return text.slice(0, tokenBudget * 2);
 	}
@@ -198,9 +208,18 @@ function truncateRetainedMessage(item: Record<string, unknown>, tokenBudget: num
 			remaining = Math.max(0, remaining - Math.min(originalTokens, remaining));
 			continue;
 		}
-		truncatedContent.push(part);
 	}
 	return truncatedContent.length > 0 ? { ...clone, content: truncatedContent } : undefined;
+}
+
+function retainTextContentOnly(item: Record<string, unknown>): Record<string, unknown> | undefined {
+	const content = item["content"];
+	if (typeof content === "string") return structuredClone(item);
+	if (!Array.isArray(content)) return undefined;
+	const textContent = content.filter(
+		(part) => isRecord(part) && (part["type"] === "input_text" || part["type"] === "output_text") && typeof part["text"] === "string",
+	);
+	return textContent.length > 0 ? { ...structuredClone(item), content: textContent } : undefined;
 }
 
 export function buildNativeCompactionV2Window(input: readonly unknown[], compactionOutput: unknown): unknown[] {
@@ -209,13 +228,15 @@ export function buildNativeCompactionV2Window(input: readonly unknown[], compact
 	for (let index = input.length - 1; index >= 0 && remaining > 0; index--) {
 		const item = input[index]!;
 		if (!isRetainedMessage(item)) continue;
-		const tokens = Math.max(1, estimateMessageTokens(item));
+		const retainedItem = retainTextContentOnly(item);
+		if (!retainedItem) continue;
+		const tokens = Math.max(1, estimateMessageTokens(retainedItem));
 		if (tokens <= remaining) {
-			retainedReversed.push(structuredClone(item));
+			retainedReversed.push(retainedItem);
 			remaining -= tokens;
 			continue;
 		}
-		const truncated = truncateRetainedMessage(item, remaining);
+		const truncated = truncateRetainedMessage(retainedItem, remaining);
 		if (truncated) retainedReversed.push(truncated);
 		remaining = 0;
 	}
@@ -223,7 +244,11 @@ export function buildNativeCompactionV2Window(input: readonly unknown[], compact
 	return [...retainedReversed, structuredClone(compactionOutput)];
 }
 
-async function* parseSSE(response: Response, signal: AbortSignal | undefined): AsyncIterable<CompactionStreamEvent> {
+async function* parseSSE(
+	response: Response,
+	signal: AbortSignal | undefined,
+	idleTimeoutMs: number,
+): AsyncIterable<CompactionStreamEvent> {
 	if (!response.body) return;
 
 	const reader = response.body.getReader();
@@ -235,7 +260,21 @@ async function* parseSSE(response: Response, signal: AbortSignal | undefined): A
 	try {
 		while (true) {
 			if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-			const { done, value } = await reader.read();
+			let timeout: ReturnType<typeof setTimeout> | undefined;
+			const read = reader.read();
+			const idleTimeout = new Promise<never>((_resolve, reject) => {
+				timeout = setTimeout(() => {
+					reject(new Error(`Compaction SSE idle timeout after ${idleTimeoutMs}ms`));
+					void reader.cancel().catch(() => {});
+				}, idleTimeoutMs);
+			});
+			let readResult: Awaited<ReturnType<typeof reader.read>>;
+			try {
+				readResult = await Promise.race([read, idleTimeout]);
+			} finally {
+				if (timeout) clearTimeout(timeout);
+			}
+			const { done, value } = readResult;
 			if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 			if (done) break;
 
@@ -271,7 +310,7 @@ async function* parseSSE(response: Response, signal: AbortSignal | undefined): A
 export async function executeNativeCompactionV2(
 	options: ExecuteNativeCompactionV2Options,
 ): Promise<NativeCompactionV2Result> {
-	const { runtime, request, signal, sessionId } = options;
+	const { runtime, request, signal, sessionId, idleTimeoutMs = DEFAULT_COMPACTION_IDLE_TIMEOUT_MS } = options;
 	if (signal?.aborted) return { ok: false, reason: "aborted" };
 
 	try {
@@ -305,7 +344,7 @@ export async function executeNativeCompactionV2(
 		let createdAt: string | undefined;
 		const compactionItems: Record<string, unknown>[] = [];
 		try {
-			for await (const event of parseSSE(response, signal)) {
+			for await (const event of parseSSE(response, signal, idleTimeoutMs)) {
 				if (event.type === "response.output_item.done" && isRecord(event.item) && (event.item["type"] === "compaction" || event.item["type"] === "context_compaction")) {
 					compactionItems.push(event.item);
 				}
