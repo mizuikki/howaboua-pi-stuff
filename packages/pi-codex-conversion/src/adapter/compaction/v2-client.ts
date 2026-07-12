@@ -15,10 +15,19 @@ function getCompactionTokenEncoding(): Tiktoken {
 	return compactionTokenEncoding;
 }
 
+type CompactionStreamResponse = {
+	id?: unknown;
+	created_at?: unknown;
+	status?: unknown;
+	error?: unknown;
+	incomplete_details?: unknown;
+	[key: string]: unknown;
+};
+
 type CompactionStreamEvent = {
 	type?: unknown;
 	item?: unknown;
-	response?: { id?: unknown; created_at?: unknown; status?: unknown } | undefined;
+	response?: CompactionStreamResponse | undefined;
 };
 
 export type NativeCompactionV2FailureReason =
@@ -27,6 +36,8 @@ export type NativeCompactionV2FailureReason =
 	| "non-2xx"
 	| "empty-body"
 	| "invalid-stream"
+	| "response-failed"
+	| "response-incomplete"
 	| "missing-completion"
 	| "invalid-output";
 
@@ -59,6 +70,38 @@ export type ExecuteNativeCompactionV2Options = {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function nonEmptyString(value: unknown): string | undefined {
+	return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function getResponseError(response: CompactionStreamResponse | undefined): { code: string | undefined; message: string | undefined } | undefined {
+	if (!isRecord(response?.error)) return undefined;
+	return {
+		code: nonEmptyString(response.error["code"]),
+		message: nonEmptyString(response.error["message"]),
+	};
+}
+
+function getIncompleteReason(response: CompactionStreamResponse | undefined): string | undefined {
+	return isRecord(response?.incomplete_details) ? nonEmptyString(response.incomplete_details["reason"]) : undefined;
+}
+
+function getResponseJson(response: CompactionStreamResponse | undefined): Record<string, unknown> | undefined {
+	return isRecord(response) ? response : undefined;
+}
+
+function formatFailedResponseMessage(response: CompactionStreamResponse | undefined): string {
+	const error = getResponseError(response);
+	if (error?.message) return error.message;
+	if (error?.code) return `Compaction response failed with error code ${error.code}`;
+	return "Compaction response failed without an error message";
+}
+
+function formatIncompleteResponseMessage(response: CompactionStreamResponse | undefined): string {
+	const reason = getIncompleteReason(response);
+	return reason ? `Compaction response incomplete: ${reason}` : "Compaction response incomplete without a reason";
 }
 
 function isAbortError(error: unknown): boolean {
@@ -345,6 +388,26 @@ export async function executeNativeCompactionV2(
 		const compactionItems: Record<string, unknown>[] = [];
 		try {
 			for await (const event of parseSSE(response, signal, idleTimeoutMs)) {
+				if (event.type === "response.failed") {
+					const responseJson = getResponseJson(event.response);
+					return {
+						ok: false,
+						reason: "response-failed",
+						status: response.status,
+						errorMessage: formatFailedResponseMessage(event.response),
+						...(responseJson ? { responseJson } : {}),
+					};
+				}
+				if (event.type === "response.incomplete") {
+					const responseJson = getResponseJson(event.response);
+					return {
+						ok: false,
+						reason: "response-incomplete",
+						status: response.status,
+						errorMessage: formatIncompleteResponseMessage(event.response),
+						...(responseJson ? { responseJson } : {}),
+					};
+				}
 				if (event.type === "response.output_item.done" && isRecord(event.item) && (event.item["type"] === "compaction" || event.item["type"] === "context_compaction")) {
 					compactionItems.push(event.item);
 				}

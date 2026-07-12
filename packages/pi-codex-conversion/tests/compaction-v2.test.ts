@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { buildNativeCompactionV2Window, executeNativeCompactionV2 } from "../src/adapter/compaction/v2-client.ts";
+import { formatCodexUsageLimitError } from "../src/providers/openai-codex/errors.ts";
 
 const runtime = {
 	provider: "openai-codex",
@@ -94,6 +95,121 @@ test("v2 compaction uses a streamed Responses request and retains the Codex wind
 	}
 });
 
+test("v2 compaction preserves a context-window response.failed error on HTTP 200", async () => {
+	const response = {
+		id: "resp_failed_context",
+		status: "failed",
+		error: {
+			code: "context_length_exceeded",
+			message: "Your input exceeds the context window of this model; Pi compaction will run.",
+		},
+	};
+	await withMockFetch(
+		(async () => sseResponse([{ type: "response.failed", response }])) as typeof fetch,
+		async () => {
+			const result = await executeNativeCompactionV2({ runtime, request: structuredClone(request) });
+			assert.deepEqual(result, {
+				ok: false,
+				reason: "response-failed",
+				status: 200,
+				errorMessage: response.error.message,
+				responseJson: response,
+			});
+			if (result.ok) return;
+			assert.doesNotMatch(result.errorMessage ?? "", /Expected exactly one compaction item|missing-completion/);
+		},
+	);
+});
+
+test("v2 compaction preserves quota and rate-limit response.failed errors for usage formatting", async () => {
+	const response = {
+		id: "resp_failed_limit",
+		status: "failed",
+		error: {
+			code: "rate_limit_exceeded",
+			message: "Too many requests",
+		},
+	};
+	await withMockFetch(
+		(async () => sseResponse([{ type: "response.failed", response }])) as typeof fetch,
+		async () => {
+			const result = await executeNativeCompactionV2({ runtime, request: structuredClone(request) });
+			assert.equal(result.ok, false);
+			if (result.ok) return;
+			assert.equal(result.reason, "response-failed");
+			assert.equal(result.status, 200);
+			assert.equal(result.errorMessage, response.error.message);
+			assert.deepEqual(result.responseJson, response);
+			assert.match(formatCodexUsageLimitError(result.responseJson) ?? "", /Codex usage limit reached/);
+		},
+	);
+});
+
+test("v2 compaction treats response.failed after an item as the terminal failure", async () => {
+	const response = {
+		id: "resp_failed_after_item",
+		status: "failed",
+		error: { code: "server_error", message: "Compaction service failed" },
+	};
+	await withMockFetch(
+		(async () => sseResponse([
+			{ type: "response.output_item.done", item: { type: "compaction", encrypted_content: "sealed" } },
+			{ type: "response.failed", response },
+			{ type: "response.completed", response: { status: "completed" } },
+		])) as typeof fetch,
+		async () => {
+			const result = await executeNativeCompactionV2({ runtime, request: structuredClone(request) });
+			assert.equal(result.ok, false);
+			if (result.ok) return;
+			assert.equal(result.reason, "response-failed");
+			assert.equal(result.status, 200);
+			assert.equal(result.errorMessage, response.error.message);
+			assert.deepEqual(result.responseJson, response);
+		},
+	);
+});
+
+test("v2 compaction reports response.incomplete with its structured reason", async () => {
+	const response = {
+		id: "resp_incomplete",
+		status: "incomplete",
+		incomplete_details: { reason: "max_output_tokens" },
+	};
+	await withMockFetch(
+		(async () => sseResponse([
+			{ type: "response.output_item.done", item: { type: "compaction", encrypted_content: "sealed" } },
+			{ type: "response.incomplete", response },
+		])) as typeof fetch,
+		async () => {
+			const result = await executeNativeCompactionV2({ runtime, request: structuredClone(request) });
+			assert.equal(result.ok, false);
+			if (result.ok) return;
+			assert.equal(result.reason, "response-incomplete");
+			assert.equal(result.status, 200);
+			assert.equal(result.errorMessage, "Compaction response incomplete: max_output_tokens");
+			assert.deepEqual(result.responseJson, response);
+			assert.doesNotMatch(result.errorMessage ?? "", /Expected exactly one compaction item|missing-completion/);
+		},
+	);
+});
+
+test("v2 compaction provides a fallback when response.failed has no error object", async () => {
+	const response = { id: "resp_failed_without_error", status: "failed" };
+	await withMockFetch(
+		(async () => sseResponse([{ type: "response.failed", response }])) as typeof fetch,
+		async () => {
+			const result = await executeNativeCompactionV2({ runtime, request: structuredClone(request) });
+			assert.deepEqual(result, {
+				ok: false,
+				reason: "response-failed",
+				status: 200,
+				errorMessage: "Compaction response failed without an error message",
+				responseJson: response,
+			});
+		},
+	);
+});
+
 test("v2 compaction rejects a stream with multiple compaction items", async () => {
 	const originalFetch = globalThis.fetch;
 	try {
@@ -137,6 +253,18 @@ test("v2 compaction rejects an empty response body", async () => {
 		async () => {
 			const result = await executeNativeCompactionV2({ runtime, request: structuredClone(request) });
 			assert.deepEqual(result, { ok: false, reason: "empty-body", status: 200 });
+		},
+	);
+});
+
+test("v2 compaction respects an already-aborted signal", async () => {
+	const controller = new AbortController();
+	controller.abort();
+	await withMockFetch(
+		(async () => { throw new Error("fetch should not be called"); }) as typeof fetch,
+		async () => {
+			const result = await executeNativeCompactionV2({ runtime, request: structuredClone(request), signal: controller.signal });
+			assert.deepEqual(result, { ok: false, reason: "aborted" });
 		},
 	);
 });
