@@ -70,7 +70,7 @@ test("injects pending native compacted window into Pi compaction summarization p
 		enabled: true,
 		cwd: process.cwd(),
 		promptSkills: [],
-		config: { ...DEFAULT_CODEX_CONVERSION_CONFIG, compaction: { ...DEFAULT_CODEX_CONVERSION_CONFIG.compaction, responsesCompaction: true } },
+		config: { ...DEFAULT_CODEX_CONVERSION_CONFIG, compaction: { ...DEFAULT_CODEX_CONVERSION_CONFIG.compaction, mode: "v1" } },
 		pendingPiCompactionNativeWindow: {
 			window: [{ type: "compaction_summary", encrypted_content: "sealed" }],
 			provider: model.provider,

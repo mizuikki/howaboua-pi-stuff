@@ -69,11 +69,16 @@ export type ResponsesFunctionCallOutputItem = {
 
 export type ResponsesReasoningItem = Record<string, unknown>;
 
+export type ResponsesCompactionTriggerItem = {
+	type: "compaction_trigger";
+};
+
 export type ResponsesInputItem =
 	| ResponsesInputMessageItem
 	| ResponsesAssistantOutputItem
 	| ResponsesFunctionCallItem
 	| ResponsesFunctionCallOutputItem
+	| ResponsesCompactionTriggerItem
 	| ResponsesReasoningItem;
 
 export type NativeCompactionRequestBody = {

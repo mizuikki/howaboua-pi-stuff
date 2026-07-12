@@ -50,7 +50,7 @@ export function shouldUseCodexAdapter(ctx: ExtensionContext, config: CodexConver
 }
 
 export function shouldUseNativeResponsesCompaction(ctx: ExtensionContext, config: CodexConversionConfig): boolean {
-	if (!config.compaction.responsesCompaction || shouldUseExtraToolsOnly(ctx, config)) return false;
+	if (config.compaction.mode === "off" || shouldUseExtraToolsOnly(ctx, config)) return false;
 	return isOpenAICodexContext(ctx) || isConfiguredAdapterProvider(ctx, config);
 }
 

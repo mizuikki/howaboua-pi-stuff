@@ -9,6 +9,7 @@ import {
 	normalizeCodexVerbosity,
 	normalizeCompactionModel,
 	normalizeCompactionReasoning,
+	normalizeResponsesCompactionMode,
 	normalizeProviderList,
 	normalizeWebSearchAuthMode,
 	normalizeWebSearchModel,
@@ -267,7 +268,7 @@ function buildItems(tab: SettingsTab, draft: CodexConversionConfig, theme: Theme
 		{ id: "toolRenaming", label: "Tool renaming", currentValue: draft.ui.toolRenaming ? "on" : "off", values: ["off", "on"] },
 		{ id: "compactTools", label: "Compact tools", currentValue: draft.ui.compactTools ? "on" : "off", values: ["off", "on"] },
 		{ id: "backgroundShellWidget", label: "Background shells widget", currentValue: draft.ui.backgroundShellWidget ? "on" : "off", values: ["off", "on"] },
-		{ id: "responsesCompaction", label: "Responses compaction", currentValue: draft.compaction.responsesCompaction ? "on" : "off", values: ["off", "on"] },
+		{ id: "responsesCompaction", label: "Responses compaction", currentValue: draft.compaction.mode, values: ["off", "v1", "v2"] },
 		{ id: "editConfig", label: "Edit config", currentValue: editorCommand() ? "Opens in default editor (please /reload)" : "Set $EDITOR", values: editorCommand() ? ["Open"] : ["Unavailable"] },
 	];
 }
@@ -280,7 +281,7 @@ function applySettingChange(id: string, value: string, draft: CodexConversionCon
 	if (id === "toolRenaming") return { ...draft, ui: { ...draft.ui, toolRenaming: value === "on" } };
 	if (id === "compactTools") return { ...draft, ui: { ...draft.ui, compactTools: value === "on" } };
 	if (id === "backgroundShellWidget") return { ...draft, ui: { ...draft.ui, backgroundShellWidget: value === "on" } };
-	if (id === "responsesCompaction") return { ...draft, compaction: { ...draft.compaction, responsesCompaction: value === "on" } };
+	if (id === "responsesCompaction") return { ...draft, compaction: { ...draft.compaction, mode: normalizeResponsesCompactionMode(value) ?? DEFAULT_CODEX_CONVERSION_CONFIG.compaction.mode } };
 	if (id === "webRun") return { ...draft, tools: { ...draft.tools, webRun: value === "on" } };
 	if (id === "imageGeneration") return { ...draft, tools: { ...draft.tools, imageGeneration: value === "on" } };
 	if (id === "backgroundShellSessions") return { ...draft, tools: { ...draft.tools, backgroundShellSessions: value === "on" } };

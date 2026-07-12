@@ -131,6 +131,8 @@ Advanced users with custom Codex-compatible providers can add provider ids in Ge
 - `webSearchModel` accepts `current`, `gpt-5.5`, `gpt-5.4`, `gpt-5.4-mini`, or `gpt-5.3-codex-spark`. The default is `gpt-5.4-mini`.
 - `compactionModel` accepts the same values. `current` keeps native Responses compaction on the active session model instead of forcing a separate compaction model.
 
+`Responses compaction` has three modes: `off`, `v1`, and `v2`. `v1` calls `/responses/compact`. `v2` follows the Codex client flow: it streams a normal Responses request containing `compaction_trigger`, stores the encrypted compaction item with the retained user-message window, and replays that window on later turns. Use v2 only with providers that support the Codex Responses compaction protocol.
+
 The footer shows the active state, for example:
 
 ```text
