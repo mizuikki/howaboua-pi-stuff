@@ -400,7 +400,11 @@ test("v2 retained window preserves mixed and pure image user messages", () => {
 	const imageOnly = { role: "user", content: [{ type: "input_image", image_url: "https://example.test/image.png" }] };
 	const compactionOutput = { type: "compaction", encrypted_content: "sealed" };
 
-	assert.deepEqual(buildNativeCompactionV2Window([mixed, imageOnly], compactionOutput), [mixed, imageOnly, compactionOutput]);
+	const window = buildNativeCompactionV2Window([mixed, imageOnly], compactionOutput);
+	assert.deepEqual(window, [mixed, imageOnly, compactionOutput]);
+	assert.notStrictEqual(window[0], mixed);
+	assert.notStrictEqual((window[0] as any).content, mixed.content);
+	assert.notStrictEqual((window[0] as any).content[0], mixed.content[0]);
 });
 
 test("v2 retained window drops unknown non-text content parts", () => {
@@ -515,4 +519,5 @@ test("v2 retained window always appends an opaque compaction item", () => {
 
 	assert.deepEqual(window, [compactionOutput]);
 	assert.notStrictEqual(window[0], compactionOutput);
+	assert.notStrictEqual((window[0] as any).nested, compactionOutput.nested);
 });
