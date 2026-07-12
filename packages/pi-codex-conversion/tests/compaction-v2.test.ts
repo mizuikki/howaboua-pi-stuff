@@ -1,5 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { Tiktoken } from "js-tiktoken/lite";
+import o200kBaseRanks from "js-tiktoken/ranks/o200k_base";
 import { buildNativeCompactionV2Window, executeNativeCompactionV2 } from "../src/adapter/compaction/v2-client.ts";
 import { formatCodexUsageLimitError } from "../src/providers/openai-codex/errors.ts";
 
@@ -26,6 +28,12 @@ const request = {
 	],
 	parallel_tool_calls: true,
 } as any;
+
+const testTokenEncoding = new Tiktoken(o200kBaseRanks);
+
+function tokenCount(text: string): number {
+	return testTokenEncoding.encode(text).length;
+}
 
 function sseResponse(events: unknown[]): Response {
 	return new Response(events.map((event) => `data: ${JSON.stringify(event)}\n\n`).join(""), {
@@ -357,34 +365,154 @@ test("v2 compaction times out when the response stream stalls", async () => {
 	);
 });
 
-test("v2 retained window excludes model output and tool history", () => {
+test("v2 retained window applies Codex's final retained-history filter", () => {
+	const compactionOutput = { type: "compaction", encrypted_content: "sealed" };
+	const visibleUser = { role: "user", content: [{ type: "input_text", text: "real user" }] };
+	const visibleHook = {
+		role: "user",
+		content: [{ type: "input_text", text: '<hook_prompt hook_run_id="hook-1">Retry with care.</hook_prompt>' }],
+	};
 	const window = buildNativeCompactionV2Window([
-		{ role: "system", content: "system" },
-		{ role: "user", content: "user" },
+		{ role: "developer", content: "stale developer instructions" },
+		{ role: "system", content: "stale system instructions" },
+		visibleUser,
+		{ role: "user", content: [{ type: "input_text", text: "<environment_context>stale context</environment_context>" }] },
+		{ role: "user", content: [{ type: "input_text", text: "# AGENTS.md instructions for test\n\n<INSTRUCTIONS>stale</INSTRUCTIONS>" }] },
+		visibleHook,
 		{ type: "message", role: "assistant", content: [{ type: "output_text", text: "assistant" }] },
+		{ type: "reasoning", summary: [] },
 		{ type: "function_call", call_id: "call_1", name: "exec", arguments: "{}" },
-	], { type: "compaction", encrypted_content: "sealed" });
+		{ type: "function_call_output", call_id: "call_1", output: "tool output" },
+		{ type: "compaction_trigger" },
+	], compactionOutput);
 
-	assert.deepEqual(window, [
-		{ role: "user", content: "user" },
-		{ type: "compaction", encrypted_content: "sealed" },
-	]);
+	assert.deepEqual(window, [visibleUser, visibleHook, compactionOutput]);
 });
 
-test("v2 retained window excludes non-text user content from its token budget", () => {
+test("v2 retained window preserves mixed and pure image user messages", () => {
+	const mixed = {
+		role: "user",
+		content: [
+			{ type: "input_text", text: "keep text" },
+			{ type: "input_image", image_url: "data:image/png;base64,AAAA", detail: "original" },
+		],
+	};
+	const imageOnly = { role: "user", content: [{ type: "input_image", image_url: "https://example.test/image.png" }] };
+	const compactionOutput = { type: "compaction", encrypted_content: "sealed" };
+
+	assert.deepEqual(buildNativeCompactionV2Window([mixed, imageOnly], compactionOutput), [mixed, imageOnly, compactionOutput]);
+});
+
+test("v2 retained window drops unknown non-text content parts", () => {
 	const window = buildNativeCompactionV2Window([
 		{
 			role: "user",
 			content: [
 				{ type: "input_text", text: "keep text" },
-				{ type: "input_image", image_url: "data:image/png;base64,AAAA", detail: "original" },
+				{ type: "audio", data: "do not retain" },
+				{ type: "input_image", image_url: "https://example.test/image.png" },
 			],
 		},
-		{ role: "user", content: [{ type: "input_image", image_url: "https://example.test/image.png" }] },
 	], { type: "compaction", encrypted_content: "sealed" });
 
 	assert.deepEqual(window, [
-		{ role: "user", content: [{ type: "input_text", text: "keep text" }] },
+		{
+			role: "user",
+			content: [
+				{ type: "input_text", text: "keep text" },
+				{ type: "input_image", image_url: "https://example.test/image.png" },
+			],
+		},
 		{ type: "compaction", encrypted_content: "sealed" },
 	]);
+});
+
+test("v2 retained window prioritizes newest messages and truncates to the remaining budget", () => {
+	const old = { role: "user", content: [{ type: "input_text", text: "old" }] };
+	const newestText = "token ".repeat(70_000);
+	const newest = { role: "user", content: [{ type: "input_text", text: newestText }] };
+	const input = [old, newest];
+	const inputSnapshot = structuredClone(input);
+	const compactionOutput = { type: "compaction", encrypted_content: "sealed", metadata: { opaque: true } };
+	const compactionSnapshot = structuredClone(compactionOutput);
+
+	const window = buildNativeCompactionV2Window(input, compactionOutput);
+	assert.equal(window.length, 2);
+	assert.equal((window[0] as any).content[0].text.length < newestText.length, true);
+	assert.equal(tokenCount((window[0] as any).content[0].text), 64_000);
+	assert.deepEqual(input, inputSnapshot);
+	assert.deepEqual(compactionOutput, compactionSnapshot);
+	assert.notStrictEqual(window.at(-1), compactionOutput);
+});
+
+test("v2 retained window shares budget across text parts and preserves images in order", () => {
+	const firstText = "a ".repeat(31_999);
+	const secondText = "a ".repeat(31_999);
+	assert.equal(tokenCount(firstText), 32_000);
+	assert.equal(tokenCount(secondText), 32_000);
+
+	const window = buildNativeCompactionV2Window([
+		{
+			role: "user",
+			content: [
+				{ type: "input_text", text: firstText },
+				{ type: "input_image", image_url: "https://example.test/before-second-text.png" },
+				{ type: "output_text", text: secondText },
+				{ type: "input_image", image_url: "https://example.test/after-second-text.png" },
+				{ type: "input_text", text: "one-token tail" },
+				{ type: "input_text", text: "" },
+			],
+		},
+	], { type: "compaction", encrypted_content: "sealed" });
+
+	const content = (window[0] as any).content;
+	assert.deepEqual(content, [
+		{ type: "input_text", text: firstText },
+		{ type: "input_image", image_url: "https://example.test/before-second-text.png" },
+		{ type: "output_text", text: secondText },
+		{ type: "input_image", image_url: "https://example.test/after-second-text.png" },
+	]);
+});
+
+test("v2 retained window keeps images before and after truncated text", () => {
+	const text = "token ".repeat(70_000);
+	const window = buildNativeCompactionV2Window([
+		{
+			role: "user",
+			content: [
+				{ type: "input_image", image_url: "https://example.test/before.png" },
+				{ type: "input_text", text },
+				{ type: "input_image", image_url: "https://example.test/after.png" },
+				{ type: "input_text", text: "" },
+			],
+		},
+	], { type: "compaction", encrypted_content: "sealed" });
+
+	const content = (window[0] as any).content;
+	assert.deepEqual(content[0], { type: "input_image", image_url: "https://example.test/before.png" });
+	assert.equal(content[1].type, "input_text");
+	assert.equal(content[1].text.length < text.length, true);
+	assert.equal(content[2].image_url, "https://example.test/after.png");
+	assert.equal(content.some((part: any) => part.type === "input_text" && part.text === ""), false);
+});
+
+test("v2 retained window charges each pure image message against the budget", () => {
+	const imageMessageCount = 64_001;
+	const input = Array.from({ length: imageMessageCount }, (_, index) => ({
+		role: "user",
+		content: [{ type: "input_image", image_url: `https://example.test/image-${index}.png` }],
+	}));
+	const window = buildNativeCompactionV2Window(input, { type: "compaction", encrypted_content: "sealed" });
+
+	assert.equal(window.length, 64_001);
+	assert.equal((window[0] as any).content[0].image_url, "https://example.test/image-1.png");
+	assert.equal((window.at(-2) as any).content[0].image_url, "https://example.test/image-64000.png");
+});
+
+test("v2 retained window always appends an opaque compaction item", () => {
+	const compactionOutput = { type: "compaction", encrypted_content: "sealed", nested: { value: 1 } };
+	const window = buildNativeCompactionV2Window([{ type: "reasoning", summary: [] }], compactionOutput);
+
+	assert.deepEqual(window, [compactionOutput]);
+	assert.notStrictEqual(window[0], compactionOutput);
 });

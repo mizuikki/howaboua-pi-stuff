@@ -196,25 +196,123 @@ function buildCodexCompactionMetadata(sessionId: string | undefined): Record<str
 	};
 }
 
-function isRetainedMessage(item: unknown): item is Record<string, unknown> {
-	return isRecord(item) && item["role"] === "user";
+const RETAINED_MESSAGE_CONTENT_TYPES = new Set(["input_text", "output_text", "input_image"]);
+const CONTEXTUAL_USER_MESSAGE_MARKERS = [
+	["<environment_context>", "</environment_context>"],
+	["<skill>", "</skill>"],
+	["<user_shell_command>", "</user_shell_command>"],
+	["<turn_aborted>", "</turn_aborted>"],
+	["<subagent_notification>", "</subagent_notification>"],
+	["<recommended_plugins>", "</recommended_plugins>"],
+	["<user_instructions>", "</user_instructions>"],
+	["<codex_internal_context", "</codex_internal_context>"],
+	["<goal_context>", "</goal_context>"],
+	["# AGENTS.md instructions", "</INSTRUCTIONS>"],
+] as const;
+
+function isRetainedMessageCandidate(item: unknown): item is Record<string, unknown> {
+	if (!isRecord(item)) return false;
+	return item["role"] === "user" || item["role"] === "developer" || item["role"] === "system";
 }
 
-function estimateMessageTokens(item: Record<string, unknown>): number {
+function hasMarkedContextualText(text: string, startMarker: string, endMarker: string): boolean {
+	const leftTrimmed = text.trimStart();
+	if (!leftTrimmed.slice(0, startMarker.length).toLowerCase().startsWith(startMarker.toLowerCase())) return false;
+	const trimmed = text.trim();
+	return trimmed.slice(-endMarker.length).toLowerCase() === endMarker.toLowerCase();
+}
+
+function isContextualUserText(text: string): boolean {
+	const trimmed = text.trim();
+	if (/^<external_([a-z0-9_]+)>[\s\S]*<\/external_\1>$/i.test(trimmed)) return true;
+	if (trimmed.startsWith("Warning: The maximum number of unified exec processes you can keep open is")) return true;
+	if (
+		trimmed.startsWith("Warning: apply_patch was requested via ")
+		&& trimmed.endsWith("Use the apply_patch tool instead of exec_command.")
+	) return true;
+	if (trimmed.startsWith("Warning: Your account was flagged for potentially high-risk cyber activity")) return true;
+	return CONTEXTUAL_USER_MESSAGE_MARKERS.some(([startMarker, endMarker]) =>
+		hasMarkedContextualText(text, startMarker, endMarker),
+	);
+}
+
+function isHookPromptFragment(text: string): boolean {
+	const trimmed = text.trim();
+	const match = /^<hook_prompt\b([^>]*)>[\s\S]*<\/hook_prompt>$/i.exec(trimmed);
+	if (!match) return false;
+	const attribute = /\bhook_run_id\s*=\s*(["'])(.*?)\1/i.exec(match[1]!);
+	return !!attribute?.[2]?.trim();
+}
+
+function isVisibleHookPromptMessage(content: unknown): boolean {
+	if (!Array.isArray(content) || content.length === 0) return false;
+	let hasHookPrompt = false;
+	for (const part of content) {
+		if (!isRecord(part) || part["type"] !== "input_text" || typeof part["text"] !== "string") return false;
+		if (isHookPromptFragment(part["text"])) {
+			hasHookPrompt = true;
+			continue;
+		}
+		if (!isContextualUserText(part["text"])) return false;
+	}
+	return hasHookPrompt;
+}
+
+function isVisibleUserMessage(item: Record<string, unknown>): boolean {
 	const content = item["content"];
-	const text = typeof content === "string"
-		? content
-		: Array.isArray(content)
-			? content
-				.filter(isRecord)
-				.map((part) => (part["type"] === "input_text" || part["type"] === "output_text") && typeof part["text"] === "string" ? part["text"] : "")
-				.join("")
-				: "";
+	if (isVisibleHookPromptMessage(content)) return true;
+	if (typeof content === "string") return !isContextualUserText(content);
+	if (!Array.isArray(content)) return false;
+	return !content.some(
+		(part) => isRecord(part) && part["type"] === "input_text" && typeof part["text"] === "string" && isContextualUserText(part["text"]),
+	);
+}
+
+function shouldKeepCompactedHistoryItem(item: Record<string, unknown>): boolean {
+	if (item["role"] === "developer") return false;
+	if (item["role"] === "user") return isVisibleUserMessage(item);
+	return false;
+}
+
+function isRetainedMessageContentPart(part: unknown): part is Record<string, unknown> {
+	return isRecord(part)
+		&& typeof part["type"] === "string"
+		&& RETAINED_MESSAGE_CONTENT_TYPES.has(part["type"])
+		&& (part["type"] === "input_image"
+			? typeof part["image_url"] === "string"
+			: typeof part["text"] === "string");
+}
+
+function retainResponsesMessageContent(item: Record<string, unknown>): Record<string, unknown> | undefined {
+	const clone = structuredClone(item);
+	const content = clone["content"];
+	if (typeof content === "string") return clone;
+	if (!Array.isArray(content)) return undefined;
+
+	const retainedContent = content.filter(isRetainedMessageContentPart);
+	if (content.length > 0 && retainedContent.length === 0) return undefined;
+	return { ...clone, content: retainedContent };
+}
+
+function textParts(item: Record<string, unknown>): string[] {
+	const content = item["content"];
+	if (typeof content === "string") return [content];
+	if (!Array.isArray(content)) return [];
+	return content
+		.filter((part) => isRecord(part) && (part["type"] === "input_text" || part["type"] === "output_text") && typeof part["text"] === "string")
+		.map((part) => part["text"] as string);
+}
+
+function countTextTokens(text: string): number {
 	try {
 		return getCompactionTokenEncoding().encode(text).length;
 	} catch {
 		return Math.ceil(text.length / 2);
 	}
+}
+
+function estimateMessageTokens(item: Record<string, unknown>): number {
+	return textParts(item).reduce((total, text) => total + countTextTokens(text), 0);
 }
 
 function truncateText(text: string, tokenBudget: number): string {
@@ -241,10 +339,14 @@ function truncateRetainedMessage(item: Record<string, unknown>, tokenBudget: num
 	let remaining = tokenBudget;
 	const truncatedContent: unknown[] = [];
 	for (const part of content) {
-		if (!isRecord(part)) continue;
-		if ((part["type"] === "input_text" || part["type"] === "output_text") && typeof part["text"] === "string") {
+		if (!isRetainedMessageContentPart(part)) continue;
+		if (part["type"] === "input_image") {
+			truncatedContent.push(part);
+			continue;
+		}
+		if (typeof part["text"] === "string") {
 			if (remaining === 0) continue;
-			const originalTokens = estimateMessageTokens({ content: [part] });
+			const originalTokens = countTextTokens(part["text"]);
 			const text = truncateText(part["text"], remaining);
 			if (!text) continue;
 			truncatedContent.push({ ...part, text });
@@ -255,23 +357,13 @@ function truncateRetainedMessage(item: Record<string, unknown>, tokenBudget: num
 	return truncatedContent.length > 0 ? { ...clone, content: truncatedContent } : undefined;
 }
 
-function retainTextContentOnly(item: Record<string, unknown>): Record<string, unknown> | undefined {
-	const content = item["content"];
-	if (typeof content === "string") return structuredClone(item);
-	if (!Array.isArray(content)) return undefined;
-	const textContent = content.filter(
-		(part) => isRecord(part) && (part["type"] === "input_text" || part["type"] === "output_text") && typeof part["text"] === "string",
-	);
-	return textContent.length > 0 ? { ...structuredClone(item), content: textContent } : undefined;
-}
-
 export function buildNativeCompactionV2Window(input: readonly unknown[], compactionOutput: unknown): unknown[] {
 	const retainedReversed: Record<string, unknown>[] = [];
 	let remaining = RETAINED_MESSAGE_TOKEN_BUDGET;
 	for (let index = input.length - 1; index >= 0 && remaining > 0; index--) {
 		const item = input[index]!;
-		if (!isRetainedMessage(item)) continue;
-		const retainedItem = retainTextContentOnly(item);
+		if (!isRetainedMessageCandidate(item) || !shouldKeepCompactedHistoryItem(item)) continue;
+		const retainedItem = retainResponsesMessageContent(item);
 		if (!retainedItem) continue;
 		const tokens = Math.max(1, estimateMessageTokens(retainedItem));
 		if (tokens <= remaining) {
