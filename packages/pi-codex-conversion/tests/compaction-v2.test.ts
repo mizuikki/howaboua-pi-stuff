@@ -121,29 +121,43 @@ test("v2 compaction preserves a context-window response.failed error on HTTP 200
 	);
 });
 
-test("v2 compaction preserves quota and rate-limit response.failed errors for usage formatting", async () => {
-	const response = {
-		id: "resp_failed_limit",
-		status: "failed",
-		error: {
-			code: "rate_limit_exceeded",
-			message: "Too many requests",
-		},
-	};
-	await withMockFetch(
-		(async () => sseResponse([{ type: "response.failed", response }])) as typeof fetch,
-		async () => {
-			const result = await executeNativeCompactionV2({ runtime, request: structuredClone(request) });
-			assert.equal(result.ok, false);
-			if (result.ok) return;
-			assert.equal(result.reason, "response-failed");
-			assert.equal(result.status, 200);
-			assert.equal(result.errorMessage, response.error.message);
-			assert.deepEqual(result.responseJson, response);
-			assert.match(formatCodexUsageLimitError(result.responseJson) ?? "", /Codex usage limit reached/);
-		},
-	);
-});
+const usageLimitCases = [
+	{
+		name: "rate_limit_exceeded",
+		response: { id: "resp_failed_rate_limit", status: "failed", error: { code: "rate_limit_exceeded", message: "Too many requests" } },
+	},
+	{
+		name: "usage_limit_reached",
+		response: { id: "resp_failed_usage_limit", status: "failed", error: { code: "usage_limit_reached", message: "Usage limit reached" } },
+	},
+	{
+		name: "usage_not_included",
+		response: { id: "resp_failed_usage_not_included", status: "failed", error: { code: "usage_not_included", message: "Usage is not included" } },
+	},
+	{
+		name: "HTTP 429",
+		response: { id: "resp_failed_http_429", status: "failed", status_code: 429, error: { message: "Too many requests" } },
+	},
+] as const;
+
+for (const usageLimitCase of usageLimitCases) {
+	test(`v2 compaction preserves ${usageLimitCase.name} response.failed errors for usage formatting`, async () => {
+		const { response } = usageLimitCase;
+		await withMockFetch(
+			(async () => sseResponse([{ type: "response.failed", response }])) as typeof fetch,
+			async () => {
+				const result = await executeNativeCompactionV2({ runtime, request: structuredClone(request) });
+				assert.equal(result.ok, false);
+				if (result.ok) return;
+				assert.equal(result.reason, "response-failed");
+				assert.equal(result.status, 200);
+				assert.equal(result.errorMessage, response.error.message);
+				assert.deepEqual(result.responseJson, response);
+				assert.match(formatCodexUsageLimitError(result.responseJson) ?? "", /Codex usage limit reached/);
+			},
+		);
+	});
+}
 
 test("v2 compaction treats response.failed after an item as the terminal failure", async () => {
 	const response = {
